@@ -1,0 +1,47 @@
+test_that("the executable demo selects the two balanced generating components", {
+  env<-new.env(parent=globalenv())
+  path<-system.file("demo","normal_mixture.R",package="pmbfa",mustWork=TRUE)
+  expressions<-parse(path)
+  model_expression<-Filter(function(e)is.call(e)&&identical(e[[1]],as.name("<-"))&&
+    identical(e[[2]],as.name("models")),as.list(expressions))[[1]][[3]]
+  expect_identical(model_expression,quote(search_pmbfa(x,G=1:4)))
+  invisible(capture.output(native(".pmbfa_with_seed")(1L,sys.source(path,envir=env))))
+  expect_identical(dim(env$x),c(8L,8L,200L))
+  expect_identical(as.integer(table(env$true_class)),c(100L,100L))
+  expect_identical(env$true_model$family,"Normal")
+  expect_identical(env$true_model$model,"CCC-CUC")
+  expect_identical(c(env$true_model$q,env$true_model$r),c(2L,2L))
+  expect_equal(qr(env$true_Lambda)$rank,2L)
+  expect_equal(qr(env$true_Delta)$rank,2L)
+  expect_equal(tcrossprod(env$row_chol),env$true_row_scale,tolerance=1e-12)
+  for(g in 1:2)expect_equal(crossprod(env$column_chols[[g]]),
+    env$true_column_scales[[g]],tolerance=1e-12)
+  expect_equal(env$true_column_scales[[2]]-env$true_column_scales[[1]],diag(.7,8L),tolerance=1e-12)
+  expect_length(env$models,4L)
+  expect_setequal(env$comparison$G,1:4)
+  expect_true(all(env$comparison$converged))
+  expect_equal(env$selected_model$params$moddat$G,2L)
+  expect_equal(env$selected_model$params$moddat$q,2L)
+  expect_equal(env$selected_model$params$moddat$r,2L)
+  expect_identical(env$selected_model$params$moddat$name,"CCC-CUC")
+  for(fit in env$models) {
+    expect_identical(fit$selection$method,"both")
+    expect_identical(names(fit$selection$paths),c("forward","backward"))
+  }
+  expect_identical(attr(env$models,"call"),quote(search_pmbfa(x=x,G=1:4)))
+  for(fit in env$models) {
+    expect_identical(fit$factor.search.method,"adaptive")
+    expect_equal(max(fit$factor.search$q),native(".pmbfa_max_factors")(8L))
+    expect_equal(max(fit$factor.search$r),native(".pmbfa_max_factors")(8L))
+    expect_identical(fit$control$init_method,"nearest")
+    expect_equal(fit$control$ncandid,200L)
+    expect_equal(fit$control$nstart,20L)
+    expect_equal(fit$control$nrep,1L)
+    expect_equal(fit$control$max.iter,10000L)
+    expect_null(fit$control$tol)
+  }
+  expect_null(attr(env$models,"call")$modelSubset)
+  expect_equal(env$accuracy,1)
+  expect_true(is.call(attr(env$models,"call")))
+  expect_type(attr(env$models,"elapsed"),"double")
+})

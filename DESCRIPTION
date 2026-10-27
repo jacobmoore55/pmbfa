@@ -1,0 +1,23 @@
+Package: pmbfa
+Type: Package
+Title: Parsimonious Mixtures of Bilinear Factor Analyzers
+Version: 0.1.3
+Authors@R: person("Jacob", "Moore", role = c("aut", "cre"),
+    email = "jacob.c.moore55@gmail.com")
+Description: Fits parsimonious mixtures of normal and skewed matrix-variate
+    bilinear factor analyzers using an alternating expectation conditional
+    maximization algorithm. Provides constrained covariance models, shared
+    initialization, adaptive constraint selection, and factor searches for
+    normal, skew-t, generalized hyperbolic, normal inverse Gaussian, and
+    variance-gamma component distributions. Numerical fitting and initialization
+    use compiled C++ while model selection remains in R. Returned fits record
+    original calls, elapsed wall-clock time, convergence and numerical diagnostics.
+License: GPL (>= 2)
+Encoding: UTF-8
+Depends: R (>= 4.1.0)
+Imports: Rcpp (>= 1.1.0), stats, utils, parallel
+LinkingTo: Rcpp
+Suggests: testthat (>= 3.0.0)
+Config/testthat/edition: 3
+SystemRequirements: C++17
+NeedsCompilation: yes
