@@ -16,6 +16,7 @@ Only the four fitting/search functions are exported. Registered S3 methods suppo
 | `.pmbfa_fit` | `R/fit.R` | Validate a public fitting request and orchestrate its component/factor grid. |
 | `.pmbfa_with_seed` | `R/initialization.R` | Evaluate an expression with a temporary seed and restore the caller RNG state. |
 | `.pmbfa_tuple_seed` | `R/initialization.R` | Derive a reproducible seed for a component/factor/family combination. |
+| `.pmbfa_report_fit` | `R/methods.R` | Print one selected converged model at a public fitting/search boundary. |
 | `print.pmbfa` | `R/methods.R` | Print a fit summary, original call and elapsed seconds. |
 | `print.pmbfa_fits` | `R/methods.R` | Print the ordered model list and whole-request metadata. |
 | `logLik.pmbfa` | `R/methods.R` | Return the accepted log likelihood with parameter and observation counts. |

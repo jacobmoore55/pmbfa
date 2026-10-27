@@ -1,3 +1,8 @@
+# pmbfa 0.1.5
+
+* Prints only the selected constraint model for each (G,q,r) combination in pmbfa/pmsbfa, and the selected factor/constraint model for each G in search_pmbfa/search_pmsbfa, when verbose=TRUE.
+* Emits parallel-grid model summaries in the parent process so they are visible with both fork and socket workers.
+
 # pmbfa 0.1.4
 
 * Makes verbose output one criterion summary per converged model fit.

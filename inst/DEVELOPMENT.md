@@ -78,6 +78,13 @@ Entries retain the original call and per-tuple or per-G search elapsed time.
 Public factor searches invoke a private fitting adapter so the returned call
 does not embed literal arrays or function closures from do.call.
 
+Verbose summaries are emitted after constraint selection for each direct-fit
+(G,q,r) tuple, or after the complete factor search for each G. The search
+adapter suppresses intermediate tuple reports without changing fitting
+controls. Parallel-grid summaries are emitted in the parent process after
+workers return. Per-cycle native likelihood output has its separate
+track_likelihood control.
+
 See FUNCTIONS.md for the function-by-function reference. The executable demo
 uses 200 normal PMBFA observations of 8 by 8 matrices, balanced groups, true
 q=r=2 and covariance model CCC-CUC. Its only fitting call is search_pmbfa(x, G = 1:4, verbose = TRUE), using default adaptive

@@ -137,11 +137,14 @@ call and classification accuracy after allowing component labels to swap.
 
 ## Progress, calls and runtime
 
-All four functions use `verbose=TRUE` to print one summary after each converged
-model fit, for example:
+With `verbose=TRUE`, `pmbfa()` and `pmsbfa()` print the best constraint model
+for each tested `(G,q,r)` combination. `search_pmbfa()` and `search_pmsbfa()`
+print the best factor/constraint model for each tested `G`, after that G's
+search finishes. Summaries describe selected converged fits and use the
+requested criterion: BIC by default, or ICL when specified. For example:
 
 ```text
-G=4 q=2 r=3 CUC-CUU BIC=41601.16 (converged)
+G=2 q=2 r=2 CCC-CUC BIC=40955.94 (converged)
 ```
 
 Set `control=list(track_likelihood=TRUE)` to also print the log likelihood and
@@ -196,7 +199,7 @@ No external matrix library or runtime compilation is needed.
 ```sh
 Rscript -e 'Rcpp::compileAttributes(".")'
 R CMD build .
-R CMD check --no-manual pmbfa_0.1.4.tar.gz
+R CMD check --no-manual pmbfa_0.1.5.tar.gz
 ```
 
 Package tests cover independent densities/moments, all normal/ST constraints,

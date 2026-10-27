@@ -55,20 +55,93 @@ test_that("unconverged fits are quiet and summaries respect the requested criter
   expect_identical(output,sprintf("G=2 q=1 r=1 UUU-UUU-U-U ICL=%.2f (converged)",fit$icl))
 })
 
-test_that("adaptive caches and multiple starts produce one summary per successful model", {
+test_that("adaptive constraints and multiple starts produce only the tuple winner", {
   d <- numerical_fixture("Normal",N=60L)
   controls <- quick_control(max.iter=3L,min.iter=1L,tol=1e6,min.component=0,nrep=2L)
   output <- capture.output(fit <- pmbfa(d$x,G=2L,q=1L,r=1L,
     inits=list(d$params,d$params),control=controls,verbose=TRUE))
-  successful <- fit$model.criteria$model[fit$model.criteria$converged]
-  expect_gt(length(successful),0L)
-  expect_length(output,length(successful))
-  expect_true(all(grepl("^G=2 q=1 r=1 [CU]{3}-[CU]{3} BIC=-?[0-9]+\\.[0-9]{2} \\(converged\\)$",output)))
-  models <- vapply(strsplit(output," ",fixed=TRUE),function(parts)parts[4L],character(1))
-  expect_setequal(models,successful)
-  expect_equal(anyDuplicated(models),0L)
+  expect_gt(sum(fit$model.criteria$converged),1L)
+  expect_identical(output,sprintf("G=2 q=1 r=1 %s BIC=%.2f (converged)",
+    fit$params$moddat$name,fit$bic))
+  expect_equal(fit$bic,min(fit$model.criteria$score))
   expect_equal(fit$initialization$nstarts,2L)
   expect_identical(names(fit$selection$paths),c("forward","backward"))
+})
+
+verbosity_summary <- function(fit) {
+  m <- fit$params$moddat
+  sprintf("G=%d q=%d r=%d %s %s=%.2f (converged)",
+    m$G,m$q,m$r,m$name,fit$criterion,fit$score)
+}
+
+test_that("direct fitting reports one selected model for every tested G,q,r tuple", {
+  controls <- quick_control(max.iter=3L,min.iter=1L,tol=1e6,min.component=0)
+  G <- c(2L,1L)
+  tuples <- expand.grid(G=G,q=1:2,r=1:2)
+  expected_keys <- with(tuples,sprintf("G=%d q=%d r=%d",G,q,r))
+  for(entry in c("pmbfa","pmsbfa")) {
+    skewed <- entry == "pmsbfa"
+    d <- numerical_fixture(if(skewed) "ST" else "Normal",n=6L,p=6L,N=60L)
+    subset <- if(skewed)c("CCC-CCC-C-C","UUU-UUU-U-U") else c("CCC-CCC","UUU-UUU")
+    output <- capture.output(fits <- do.call(getExportedValue("pmbfa",entry),
+      list(x=d$x,G=G,q=1:2,r=1:2,modelSubset=subset,control=controls,verbose=TRUE)))
+    expect_true(all(vapply(fits,function(fit)fit$converged,logical(1))),info=entry)
+    expect_length(output,nrow(tuples))
+    expect_setequal(output,vapply(fits,verbosity_summary,character(1)))
+    keys <- vapply(strsplit(output," ",fixed=TRUE),
+      function(parts)paste(parts[1:3],collapse=" "),character(1))
+    expect_identical(keys,expected_keys,info=entry)
+    for(fit in fits) expect_equal(fit$score,min(fit$model.criteria$score))
+  }
+})
+
+test_that("factor searches report only the best model for each tested G", {
+  controls <- quick_control(max.iter=3L,min.iter=1L,tol=1e6,min.component=0)
+  G <- c(2L,1L)
+  for(entry in c("search_pmbfa","search_pmsbfa")) {
+    skewed <- entry == "search_pmsbfa"
+    d <- numerical_fixture(if(skewed) "ST" else "Normal",n=6L,p=6L,N=60L)
+    subset <- if(skewed)c("CCC-CCC-C-C","UUU-UUU-U-U") else c("CCC-CCC","UUU-UUU")
+    for(method in c("adaptive","grid")) {
+      arguments <- list(x=d$x,G=G,max_q=2L,max_r=2L,modelSubset=subset,
+        control=controls,verbose=TRUE)
+      if(method == "grid")arguments$search.method <- method
+      output <- capture.output(fits <- do.call(getExportedValue("pmbfa",entry),arguments))
+      expect_true(all(vapply(fits,function(fit)fit$converged,logical(1))),info=entry)
+      expect_length(output,length(G))
+      by_G <- fits[match(G,vapply(fits,function(fit)as.integer(fit$params$moddat$G),integer(1)))]
+      expect_identical(output,unname(vapply(by_G,verbosity_summary,character(1))),info=entry)
+      for(fit in fits) {
+        expect_gt(nrow(fit$factor.search),1L)
+        expect_equal(fit$score,min(fit$factor.search$score))
+        expect_identical(fit$factor.search.method,method)
+        expect_true(fit$control$verbose)
+      }
+    }
+  }
+})
+
+test_that("parallel fitting reports tuple winners in the parent process", {
+  d <- numerical_fixture("Normal",N=60L)
+  controls <- quick_control(max.iter=3L,min.iter=1L,tol=1e6,min.component=0)
+  arguments <- list(x=d$x,G=c(2L,1L),q=1L,r=1L,
+    modelSubset=c("CCC-CCC","UUU-UUU"),control=controls,verbose=TRUE)
+  serial <- capture.output(expected <- do.call(pmbfa,arguments))
+  expect_length(serial,2L)
+  arguments$parallelize <- TRUE
+  arguments$ncores <- 2L
+  if(.Platform$OS.type == "unix") {
+    output <- capture.output(forked <- do.call(pmbfa,arguments))
+    expect_identical(output,serial)
+    expect_identical(lapply(forked,function(fit)fit$params),
+      lapply(expected,function(fit)fit$params))
+  }
+  engine <- clone_engine()
+  engine$.Platform <- modifyList(.Platform,list(OS.type="windows"))
+  output <- capture.output(socket <- do.call(engine$pmbfa,arguments))
+  expect_identical(output,serial)
+  expect_identical(lapply(socket,function(fit)fit$params),
+    lapply(expected,function(fit)fit$params))
 })
 
 test_that("initialization and short refinements stay quiet when tracking is requested", {

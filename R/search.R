@@ -71,6 +71,7 @@
       converged=vapply(fits,function(fit)isTRUE(fit$converged),logical(1)))
     best$factor.search.method <- search.method
     best$elapsed <- .pmbfa_elapsed(started_g)
+    .pmbfa_report_fit(best)
     best
   })
   if (length(results) == 1L) return(results[[1]])
@@ -108,5 +109,5 @@ search_pmbfa <- function(x,G,max_q=NULL,max_r=NULL,
     screening=c("none","nested"),...) {
   .pmbfa_fit(x,G,q,r,class,modelSubset,family,seed,adaptive,
     adaptive.method[1L],criterion[1L],verbose,parallelize,ncores,inits,control,
-    list(...),screening=screening[1L])
+    list(...),screening=screening[1L],report=FALSE)
 }

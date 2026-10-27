@@ -38,7 +38,8 @@
 # Validate a public fitting request and orchestrate its component/factor grid.
 .pmbfa_fit <- function(x, G, q, r, class, modelSubset, family, seed, adaptive,
                        adaptive.method, criterion, verbose, parallelize,
-                       ncores, inits, control, dots, screening="none") {
+                       ncores, inits, control, dots, screening="none",
+                       report=TRUE) {
   for (alias in c("rG", "rq", "rr")) {
     if (!is.null(dots[[alias]])) {
       if (alias == "rG") G <- dots[[alias]]
@@ -102,10 +103,15 @@
     ncores <- .pmbfa_integer(ncores,"ncores")
     if (length(ncores) != 1L) stop("ncores must be scalar.",call.=FALSE)
   }
-  runner <- function(i) .pmbfa_timed_tuple(x,tuples$G[i],tuples$q[i],tuples$r[i],
-    family,labels,modelSubset,adaptive,adaptive.method,criterion,seed,inits,control,
-    screening=screening)
-  if (parallelize && nrow(tuples) > 1L) {
+  run_parallel <- parallelize && nrow(tuples) > 1L
+  runner <- function(i) {
+    fit <- .pmbfa_timed_tuple(x,tuples$G[i],tuples$q[i],tuples$r[i],
+      family,labels,modelSubset,adaptive,adaptive.method,criterion,seed,inits,control,
+      screening=screening)
+    if (report && !run_parallel) .pmbfa_report_fit(fit,control$verbose)
+    fit
+  }
+  if (run_parallel) {
     if (is.null(ncores)) ncores <- min(nrow(tuples),
       max(1L, parallel::detectCores(logical=FALSE)-1L, na.rm=TRUE))
     ncores <- min(ncores,nrow(tuples))
@@ -119,6 +125,8 @@
       out <- .pmbfa_psock(tuples,arguments,ncores)
     }
   } else out <- lapply(seq_len(nrow(tuples)),runner)
+  if (report && run_parallel)
+    for (fit in out) .pmbfa_report_fit(fit,control$verbose)
   if (length(out) == 1L) return(out[[1]])
   out <- out[order(vapply(out,function(fit)fit$score,numeric(1)))]
   class(out) <- c("pmbfa_fits","list")

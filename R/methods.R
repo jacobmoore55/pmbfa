@@ -1,4 +1,15 @@
 # Internal organization: see inst/DEVELOPMENT.md.
+# Print one selected converged model at a public fitting/search boundary.
+.pmbfa_report_fit <- function(fit,verbose=fit$control$verbose) {
+  if (isTRUE(verbose) && isTRUE(fit$converged) &&
+      length(fit$score) == 1L && is.finite(fit$score)) {
+    m <- fit$params$moddat
+    cat(sprintf("G=%d q=%d r=%d %s %s=%.2f (%s)\n",
+      m$G,m$q,m$r,m$name,fit$criterion,fit$score,fit$status))
+  }
+  invisible(fit)
+}
+
 # Print a fit summary, original call and elapsed seconds.
 print.pmbfa <- function(x,...) {
   m <- x$params$moddat
