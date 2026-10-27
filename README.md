@@ -1,5 +1,7 @@
 # pmbfa
 
+[![R-CMD-check](https://github.com/jacobmoore55/pmbfa/actions/workflows/R-CMD-check.yaml/badge.svg?branch=main)](https://github.com/jacobmoore55/pmbfa/actions/workflows/R-CMD-check.yaml)
+
 `pmbfa` fits parsimonious mixtures of normal and skewed matrix-variate bilinear
 factor analyzers. Each observation is a matrix. Low-rank factors describe row
 and column dependence; model constraints share loadings, residual variances,
@@ -21,7 +23,16 @@ package; `help("pmbfa-control")` describes algorithm controls.
 ## Install
 
 Requires R >= 4.1, Rcpp >= 1.1.0 and a C++17 compiler for source installation.
-From the package source directory (for example, a local repository clone):
+Install from GitHub:
+
+```r
+install.packages("remotes")
+remotes::install_github("jacobmoore55/pmbfa")
+library(pmbfa)
+```
+
+Alternatively, from the package source directory (for example, a local
+repository clone):
 
 ```r
 install.packages(".", repos = NULL, type = "source")

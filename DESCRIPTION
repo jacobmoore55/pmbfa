@@ -13,6 +13,8 @@ Description: Fits parsimonious mixtures of normal and skewed matrix-variate
     use compiled C++ while model selection remains in R. Returned fits record
     original calls, elapsed wall-clock time, convergence and numerical diagnostics.
 License: GPL (>= 2)
+URL: https://github.com/jacobmoore55/pmbfa
+BugReports: https://github.com/jacobmoore55/pmbfa/issues
 Encoding: UTF-8
 Depends: R (>= 4.1.0)
 Imports: Rcpp (>= 1.1.0), stats, utils, parallel
