@@ -22,5 +22,6 @@
 \item{criterion}{Internal score label, overwritten by the public criterion argument.}
 }
 }
+\section{Legacy quiet argument}{When passed directly to a fitting or search function, \code{quiet=FALSE} enables winner summaries and \code{quiet=TRUE} suppresses them. An explicit \code{quiet} takes precedence over \code{verbose} and \code{control$verbose}. It must be one nonmissing logical value. Per-cycle likelihood tracking is controlled separately by \code{track_likelihood}.}
 \section{Numerical interpretation}{Absolute variance floors depend on the observation units. They prevent collapse but do not impose an upper condition-number limit on a scale matrix. Numerical failures are returned with the last accepted state and an infinite selection score. No automatic diagonal jitter or undocumented change to the likelihood is applied.}
 \seealso{\link{pmbfa}, \link{search_pmbfa}}

@@ -8,14 +8,13 @@ test_that("the executable demo selects the two balanced generating components", 
   expect_false("stopifnot" %in% all.names(expressions))
   output<-capture.output(native(".pmbfa_with_seed")(1L,sys.source(path,envir=env)))
   expect_false(any(grepl("^Iteration ",output)))
-  summaries <- output[startsWith(output,"G=")]
-  expect_length(summaries,4L)
+  expect_length(output,4L)
   by_G <- env$models[order(vapply(env$models,function(fit)fit$params$moddat$G,numeric(1)))]
   expected <- vapply(by_G,function(fit) {
     m <- fit$params$moddat
     sprintf("G=%d q=%d r=%d %s BIC=%.2f (converged)",m$G,m$q,m$r,m$name,fit$bic)
   },character(1))
-  expect_identical(summaries,unname(expected))
+  expect_identical(output,unname(expected))
   expect_identical(dim(env$x),c(8L,8L,200L))
   expect_identical(as.integer(table(env$true_class)),c(100L,100L))
   expect_identical(env$true_model$family,"Normal")

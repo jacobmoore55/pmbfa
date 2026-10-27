@@ -50,7 +50,6 @@
   }
   if (!is.null(dots$icl)) criterion <- if (isTRUE(dots$icl)) "ICL" else "BIC"
   if (!is.null(dots[["track"]])) verbose <- isTRUE(dots[["track"]])
-  if (!is.null(dots$quiet) && isTRUE(dots$quiet)) verbose <- FALSE
   if (!is.null(dots$aitken)) control$aitken <- dots$aitken
   recognized <- c("icl", "track", "quiet", "aitken", "max.iter", "tol",
                    "mag", "stopping", "ncandid", "nstart", "nrep",

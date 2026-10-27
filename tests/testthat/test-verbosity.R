@@ -1,8 +1,9 @@
-verbosity_fit <- function(entry, control, verbose=FALSE, criterion="BIC") {
+verbosity_fit <- function(entry, control, verbose=FALSE, criterion="BIC",quiet=NULL) {
   skewed <- grepl("pmsbfa",entry,fixed=TRUE)
   d <- numerical_fixture(if(skewed) "ST" else "Normal",N=60L)
   arguments <- list(x=d$x,G=2L,inits=d$params,control=control,
     modelSubset=d$params$moddat$name,verbose=verbose,criterion=criterion)
+  if(!is.null(quiet))arguments$quiet <- quiet
   if(startsWith(entry,"search_")) {
     arguments$max_q <- 1L
     arguments$max_r <- 1L
@@ -171,4 +172,41 @@ test_that("likelihood controls cannot partially match the legacy track alias", {
   expect_false(legacy$control$track_likelihood)
   expect_length(output,1L)
   expect_true(startsWith(output,"G=2 q=1 r=1 UUU-UUU BIC="))
+})
+
+test_that("quiet is the inverse verbosity alias and overrides conflicting flags", {
+  controls <- quick_control(max.iter=3L,min.iter=1L,tol=1e6,min.component=0)
+  for(entry in c("pmbfa","pmsbfa","search_pmbfa","search_pmsbfa")) {
+    reference <- capture.output(expected <- verbosity_fit(entry,controls,verbose=TRUE))
+    output <- capture.output(fit <- verbosity_fit(entry,
+      modifyList(controls,list(verbose=FALSE)),quiet=FALSE))
+    expect_identical(output,reference,info=entry)
+    expect_length(output,1L)
+    expect_true(fit$control$verbose,info=entry)
+    expect_identical(fit$params,expected$params,info=entry)
+    expect_identical(fit$loglik,expected$loglik,info=entry)
+    output <- capture.output(silent <- verbosity_fit(entry,
+      modifyList(controls,list(verbose=TRUE)),verbose=TRUE,quiet=TRUE))
+    expect_length(output,0L)
+    expect_false(silent$control$verbose,info=entry)
+    expect_identical(silent$params,expected$params,info=entry)
+    for(invalid in list(NA,c(FALSE,TRUE),0))
+      expect_error(verbosity_fit(entry,controls,quiet=invalid),"quiet must be TRUE or FALSE")
+  }
+})
+
+test_that("quiet=FALSE produces exactly one search winner for each G in 1:4", {
+  controls <- quick_control(max.iter=3L,min.iter=1L,tol=1e6,min.component=0)
+  d <- numerical_fixture("Normal",N=120L,G=4L)
+  for(entry in c("search_pmbfa","search_pmsbfa")) {
+    subset <- if(entry == "search_pmbfa")c("CCC-CCC","UUU-UUU") else
+      c("CCC-CCC-C-C","UUU-UUU-U-U")
+    output <- capture.output(fits <- do.call(getExportedValue("pmbfa",entry),
+      list(x=d$x,G=1:4,max_q=1L,max_r=1L,modelSubset=subset,
+        control=controls,quiet=FALSE)))
+    expect_true(all(vapply(fits,function(fit)fit$converged,logical(1))),info=entry)
+    expect_length(output,4L)
+    by_G <- fits[order(vapply(fits,function(fit)fit$params$moddat$G,numeric(1)))]
+    expect_identical(output,unname(vapply(by_G,verbosity_summary,character(1))),info=entry)
+  }
 })

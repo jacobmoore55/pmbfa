@@ -100,6 +100,12 @@
                                           c("diagonal","component"))
   defaults$criterion <- match.arg(toupper(defaults$criterion),c("BIC","ICL"))
   defaults$verbose <- isTRUE(defaults$verbose)
+  if (!is.null(dots[["quiet"]])) {
+    quiet <- dots[["quiet"]]
+    if (!is.logical(quiet) || length(quiet) != 1L || is.na(quiet))
+      stop("quiet must be TRUE or FALSE.",call.=FALSE)
+    defaults$verbose <- !isTRUE(quiet)
+  }
   defaults$track_likelihood <- isTRUE(defaults$track_likelihood)
   defaults$profile <- isTRUE(defaults$profile)
   defaults

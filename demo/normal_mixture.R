@@ -44,22 +44,15 @@ comparison <- do.call(rbind,lapply(models,function(fit)data.frame(
   BIC=BIC(fit),score=fit$score,converged=fit$converged,status=fit$status,elapsed=fit$elapsed)))
 comparison <- comparison[order(comparison$G),]
 row.names(comparison) <- NULL
-display <- comparison
-for(column in c("loglik","BIC","score","elapsed"))
-  display[[column]] <- sprintf("%.2f",comparison[[column]])
-print(display,row.names=FALSE)
 selected_model <- models[[1L]]
-print(selected_model)
-cat(sprintf("Total search elapsed: %.2f seconds\n",attr(models,"elapsed")))
-cat("Recorded user call:\n")
-print(attr(models,"call"))
 if(selected_model$params$moddat$G==2L) {
   # Component labels can be exchanged without changing the mixture.
   accuracy <- max(mean(selected_model$cluster==true_class),
                   mean(3L-selected_model$cluster==true_class))
-  cat(sprintf("Classification accuracy after label alignment: %.2f%%\n",100*accuracy))
 }
 
+# Inspect comparison, selected_model, accuracy, and the models' call/elapsed
+# metadata interactively when needed. Only the four G summaries print here.
 # These tables expose the actual candidate comparisons in each direction.
 # selected_model$selection$paths$forward
 # selected_model$selection$paths$backward

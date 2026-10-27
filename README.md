@@ -66,8 +66,11 @@ isotropic row residuals, common column loadings, and component-specific
 isotropic column residuals. Locations differ between components.
 
 ```r
-demo("normal_mixture", package = "pmbfa", ask = FALSE)
+demo("normal_mixture", package = "pmbfa", ask = FALSE, echo = FALSE)
 ```
+
+`echo=FALSE` turns off R's echo of the demo source code. The demo prints
+exactly four selected-model summaries, one for each G in 1:4.
 
 The complete data generation and search code is:
 
@@ -109,7 +112,6 @@ true_class <- true_class[ordering]
 # Exercise the public defaults for factor search, constraints and initialization.
 models <- search_pmbfa(x, G = 1:4, verbose = TRUE)
 
-print(models)
 selected_model <- models[[1]]
 ```
 
@@ -132,8 +134,9 @@ selected_model$selection$paths$backward
 ```
 
 Initialization, seed, stopping tolerance and iteration budget also use their
-public defaults. The demo prints BIC, convergence, elapsed time, the original
-call and classification accuracy after allowing component labels to swap.
+public defaults. The demo prints only the selected-model summaries. Its
+`models`, `comparison`, `selected_model` and `accuracy` objects can be inspected
+afterward; fits also store their calls and elapsed times.
 
 ## Progress, calls and runtime
 
@@ -146,6 +149,10 @@ requested criterion: BIC by default, or ICL when specified. For example:
 ```text
 G=2 q=2 r=2 CCC-CUC BIC=40955.94 (converged)
 ```
+
+The legacy argument `quiet=FALSE` enables the same winner summaries;
+`quiet=TRUE` suppresses them. An explicit `quiet` setting overrides `verbose`
+and `control$verbose`.
 
 Set `control=list(track_likelihood=TRUE)` to also print the log likelihood and
 its change after each accepted AECM cycle. This option defaults to `FALSE`
@@ -199,7 +206,7 @@ No external matrix library or runtime compilation is needed.
 ```sh
 Rscript -e 'Rcpp::compileAttributes(".")'
 R CMD build .
-R CMD check --no-manual pmbfa_0.1.5.tar.gz
+R CMD check --no-manual pmbfa_0.1.6.tar.gz
 ```
 
 Package tests cover independent densities/moments, all normal/ST constraints,

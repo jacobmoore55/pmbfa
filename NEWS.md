@@ -1,3 +1,9 @@
+# pmbfa 0.1.6
+
+* Restores quiet=FALSE as the inverse alias of verbose=TRUE, with explicit quiet taking precedence over verbose settings.
+* Removes extra table, selected-fit and diagnostic printouts from the demo; its entire output is now four winner summaries.
+* Documents echo=FALSE for running the demo without R's source-code echo, and tests all console output rather than filtering summary lines.
+
 # pmbfa 0.1.5
 
 * Prints only the selected constraint model for each (G,q,r) combination in pmbfa/pmsbfa, and the selected factor/constraint model for each G in search_pmbfa/search_pmsbfa, when verbose=TRUE.

@@ -84,6 +84,9 @@ adapter suppresses intermediate tuple reports without changing fitting
 controls. Parallel-grid summaries are emitted in the parent process after
 workers return. Per-cycle native likelihood output has its separate
 track_likelihood control.
+The legacy quiet argument is normalized after control merging: explicit
+quiet=FALSE enables summaries, and quiet=TRUE disables them. The demo has
+no additional table or diagnostic printouts; tests check all console output.
 
 See FUNCTIONS.md for the function-by-function reference. The executable demo
 uses 200 normal PMBFA observations of 8 by 8 matrices, balanced groups, true
