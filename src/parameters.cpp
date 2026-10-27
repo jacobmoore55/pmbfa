@@ -8,7 +8,7 @@ Controls::Controls(const List& a){
     tol=option(a,"tol",1e-6);mag=option(a,"mag",7.0);
     floor=option(a,"variance.floor",.1);numin=option(a,"nu.min",4.1);numax=option(a,"nu.max",1e12);
     shapemin=option(a,"shape.min",.5);mincomp=option(a,"min.component",6.0);pcgtol=option(a,"pcg.tol",1e-9);
-    verbose=option(a,"verbose",false);profile=option(a,"profile",false);std::string s=option(a,"stopping",std::string("increment"));
+    track_likelihood=option(a,"track_likelihood",false);profile=option(a,"profile",false);std::string s=option(a,"stopping",std::string("increment"));
     aitken=s=="aitken";
     pcg_preconditioner=option(a,"pcg.preconditioner",std::string("diagonal"));
     if(pcg_preconditioner!="component"&&pcg_preconditioner!="diagonal")stop("pcg.preconditioner must be 'component' or 'diagonal'.");

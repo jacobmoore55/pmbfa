@@ -4,8 +4,11 @@ test_that("the executable demo selects the two balanced generating components", 
   expressions<-parse(path)
   model_expression<-Filter(function(e)is.call(e)&&identical(e[[1]],as.name("<-"))&&
     identical(e[[2]],as.name("models")),as.list(expressions))[[1]][[3]]
-  expect_identical(model_expression,quote(search_pmbfa(x,G=1:4)))
-  invisible(capture.output(native(".pmbfa_with_seed")(1L,sys.source(path,envir=env))))
+  expect_identical(model_expression,quote(search_pmbfa(x,G=1:4,verbose=TRUE)))
+  expect_false("stopifnot" %in% all.names(expressions))
+  output<-capture.output(native(".pmbfa_with_seed")(1L,sys.source(path,envir=env)))
+  expect_false(any(grepl("^Iteration ",output)))
+  expect_gt(sum(grepl("^G=[0-9]+ q=[0-9]+ r=[0-9]+ [CU]{3}-[CU]{3} BIC=-?[0-9]+\\.[0-9]{2} \\(converged\\)$",output)),4L)
   expect_identical(dim(env$x),c(8L,8L,200L))
   expect_identical(as.integer(table(env$true_class)),c(100L,100L))
   expect_identical(env$true_model$family,"Normal")
@@ -28,7 +31,7 @@ test_that("the executable demo selects the two balanced generating components", 
     expect_identical(fit$selection$method,"both")
     expect_identical(names(fit$selection$paths),c("forward","backward"))
   }
-  expect_identical(attr(env$models,"call"),quote(search_pmbfa(x=x,G=1:4)))
+  expect_identical(attr(env$models,"call"),quote(search_pmbfa(x=x,G=1:4,verbose=TRUE)))
   for(fit in env$models) {
     expect_identical(fit$factor.search.method,"adaptive")
     expect_equal(max(fit$factor.search$q),native(".pmbfa_max_factors")(8L))
@@ -39,6 +42,8 @@ test_that("the executable demo selects the two balanced generating components", 
     expect_equal(fit$control$nrep,1L)
     expect_equal(fit$control$max.iter,10000L)
     expect_null(fit$control$tol)
+    expect_true(fit$control$verbose)
+    expect_false(fit$control$track_likelihood)
   }
   expect_null(attr(env$models,"call")$modelSubset)
   expect_equal(env$accuracy,1)

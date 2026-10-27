@@ -4,6 +4,7 @@ test_that("normal and skewed factor searches default to both constraint directio
   normal<-search_pmbfa(d$x,G=2,max_q=1,max_r=1,control=ctl)
   skewed<-search_pmsbfa(d$x,G=2,max_q=1,max_r=1,family="ST",control=ctl)
   for(fit in list(normal,skewed)) {
+    expect_identical(fit$factor.search.method,"adaptive")
     expect_identical(fit$selection$method,"both")
     expect_identical(names(fit$selection$paths),c("forward","backward"))
   }

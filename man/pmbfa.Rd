@@ -20,7 +20,7 @@ pmbfa(x, G = 2L, q = 1:2, r = 1:2, class = NULL,
 \item{adaptive}{Logical, or a search direction string. \code{FALSE} fits all allowed constraint models when \code{modelSubset} is absent.}
 \item{adaptive.method}{Constraint search direction: \code{"both"} (the default), \code{"forward"}, or \code{"backward"}. Both paths run when adaptive selection is enabled and no modelSubset is supplied.}
 \item{criterion}{\code{"BIC"} or \code{"ICL"}; smaller values are preferred.}
-\item{verbose}{Print model and iteration progress.}
+\item{verbose}{Print one criterion summary per converged model fit. Per-cycle likelihood output is enabled separately with \code{control=list(track_likelihood=TRUE)}.}
 \item{parallelize}{Parallelize component/factor grid combinations. A single native fit is serial.}
 \item{ncores}{Optional positive integer worker count.}
 \item{inits}{Optional parameter list or bank of lists for one component/factor combination. See Details.}

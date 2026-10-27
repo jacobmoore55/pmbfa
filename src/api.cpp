@@ -11,7 +11,7 @@ List pmbfaEM(const NumericVector& x,const List& params,const List& aargs){return
 // [[Rcpp::export]]
 List pmbfa_evaluate(const NumericVector& x,const List& params,Nullable<List> aargs=R_NilValue){List a=aargs.isNotNull()?clone(as<List>(aargs)):List::create();a["max.iter"]=0;return pm::fit(x,params,a,false);}
 // [[Rcpp::export]]
-std::string pmbfa_core_version(){return "1.2.0";}
+std::string pmbfa_core_version(){return "1.2.1";}
 
 // Count a candidate before fitting it. Used by optional nested-model screening.
 // [[Rcpp::export]]

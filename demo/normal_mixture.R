@@ -37,14 +37,7 @@ true_class <- true_class[ordering]
 
 # Use the public search defaults: adaptive factor search, both constraint
 # directions, automatically determined factor limits, and default starts/controls.
-models <- search_pmbfa(x,G=1:4)
-
-stopifnot(all(vapply(models,function(fit)
-  identical(names(fit$selection$paths),c("forward","backward")),logical(1))))
-stopifnot(all(vapply(models,function(fit)
-  identical(fit$factor.search.method,"adaptive"),logical(1))))
-cat("Factor search: adaptive (default)\n")
-cat("Adaptive constraint-search directions: forward and backward (default)\n")
+models <- search_pmbfa(x, G = 1:4, verbose = TRUE)
 comparison <- do.call(rbind,lapply(models,function(fit)data.frame(
   G=fit$params$moddat$G,q=fit$params$moddat$q,r=fit$params$moddat$r,
   model=fit$params$moddat$name,loglik=as.numeric(logLik(fit)),

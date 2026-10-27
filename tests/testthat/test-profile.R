@@ -17,10 +17,14 @@ stopifnot(identical(a$loglik,b$loglik),identical(a$params,b$params),
           pmbfa_model_npar(20,20,2,3,2,'CUC-CUC-C-U')==1302,
           pmbfa_model_npar(20,20,2,3,2,'CCC-CCC-C-U')==1300,
           b$npar==pmbfa_model_npar(4,4,2,1,1,p$moddat$name,'ST'))
-ctl$verbose <- TRUE
-printed <- capture.output(pmsbfaEM(x,p,ctl))
+ctl$track_likelihood <- TRUE
+printed <- capture.output(tracked <- pmsbfaEM(x,p,ctl))
 lines <- printed[grepl('^Iteration ',printed)]
 stopifnot(length(lines)>0L,all(grepl('log likelihood = -?[0-9]+\\.[0-9]{2}, change = -?[0-9]+\\.[0-9]{2}$',lines)))
+expect_length(printed,tracked$iter)
+expect_identical(tracked$loglik,b$loglik)
+expect_identical(tracked$params,b$params)
+expect_identical(tracked$posterior,b$posterior)
 expect_length(b$diagnostics$pcg_iterations_by_cycle,b$iter)
 expect_equal(sum(b$diagnostics$pcg_iterations_by_cycle),b$diagnostics$pcg_iterations)
 cat('Profiling invariance, timing, native count, and native printing checks passed.\n')

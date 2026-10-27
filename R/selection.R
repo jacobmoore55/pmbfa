@@ -144,7 +144,7 @@
     best$starts <- data.frame(start=seq_along(fits), loglik=ll,
                               converged=converged)
     assign(name, best, envir=cache)
-    if (isTRUE(control$verbose))
+    if (isTRUE(control$verbose) && isTRUE(best$converged) && is.finite(best$score))
       cat(sprintf("G=%d q=%d r=%d %s %s=%.2f (%s)\n", G,q,r,name,
                    criterion,best$score,best$status))
     best

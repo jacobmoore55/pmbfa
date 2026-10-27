@@ -304,6 +304,7 @@ Rcpp::List initialize(
   Rcpp::List scoring_options = Rcpp::clone(aargs);
   scoring_options["max.iter"] = 0;
   scoring_options["verbose"] = false;
+  scoring_options["track_likelihood"] = false;
   std::vector<Candidate> screened, refined;
   screened.reserve(nstart);
   refined.reserve(nrep);

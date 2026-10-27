@@ -16,7 +16,9 @@
 \item{pcg.tol, pcg.max.iter}{Shared-skewness residual tolerance (1e-9) and per-attempt inner iteration limit (0 means n*p). The true residual is verified.}
 \item{pcg.preconditioner}{\code{"diagonal"} by default, or \code{"component"}. The latter can help aligned spatial covariance systems but may be slower with heterogeneous scales. Failed component attempts retry diagonal from the original starting matrix. The per-attempt budget applies to both attempts.}
 \item{backtracks}{Maximum likelihood-monotonicity damping attempts; default 12.}
-\item{verbose, profile}{Print progress, or record numerical phase timing; defaults FALSE. Profiling also returns \code{pcg_iterations_by_cycle} for accepted cycles. Stored values retain full precision even though fitted-object printing uses two decimals.}
+\item{verbose}{Print one model/criterion summary after each converged model fit; default FALSE. The public \code{verbose} argument supplies this default.}
+\item{track_likelihood}{Print the log likelihood and change after each accepted AECM cycle; default FALSE. This is independent of \code{verbose}. Initialization screening and short refinements remain quiet. Likelihood curves are always retained in the returned fit.}
+\item{profile}{Record numerical phase timing; default FALSE. Also returns \code{pcg_iterations_by_cycle} for accepted cycles. Stored values retain full precision even though fitted-object printing uses two decimals.}
 \item{criterion}{Internal score label, overwritten by the public criterion argument.}
 }
 }

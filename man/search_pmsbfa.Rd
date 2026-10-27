@@ -26,7 +26,7 @@ For parallel grids, overall elapsed time includes worker overhead and is not the
 }
 
 \section{Balanced normal-mixture demonstration}{
-\code{demo("normal_mixture", package="pmbfa", ask=FALSE)} generates 200 normal PMBFA observations of 8 by 8 matrices in two balanced components, with distinct locations, true \code{q=r=2}, and covariance model \code{CCC-CUC}. Its only fitting call is \code{search_pmbfa(x,G=1:4)}. This exercises the default adaptive factor search, automatically determined factor limits, both forward/backward constraint searches, and default initialization and stopping controls. No \code{modelSubset} restricts the fitted covariance models. The demo prints criteria, convergence, timing and the recorded call.
+\code{demo("normal_mixture", package="pmbfa", ask=FALSE)} generates 200 normal PMBFA observations of 8 by 8 matrices in two balanced components, with distinct locations, true \code{q=r=2}, and covariance model \code{CCC-CUC}. Its only fitting call is \code{search_pmbfa(x, G = 1:4, verbose = TRUE)}. This exercises the default adaptive factor search, automatically determined factor limits, both forward/backward constraint searches, and default initialization and stopping controls. No \code{modelSubset} restricts the fitted covariance models. The demo prints criteria, convergence, timing and the recorded call.
 }
 \seealso{\link{pmbfa}, \link{pmbfa-control}}
 \examples{

@@ -37,7 +37,7 @@ List fit(const NumericVector& x,const List& input,const List& options,bool norma
         }
       }
       double gain=next.ll-state.ll;accepted=std::move(trial);state=std::move(next);curve.push_back(state.ll);pcg_curve.push_back(pcg_iterations-pcg_before);++iterations;
-      if(control.verbose){std::ostringstream line;line<<std::fixed<<std::setprecision(2)<<"Iteration "<<iterations<<": log likelihood = "<<state.ll<<", change = "<<gain<<"\n";Rcout<<line.str();}
+      if(control.track_likelihood){std::ostringstream line;line<<std::fixed<<std::setprecision(2)<<"Iteration "<<iterations<<": log likelihood = "<<state.ll<<", change = "<<gain<<"\n";Rcout<<line.str();}
       bool stop_now=false;
       if(iterations>=control.minit){
         if(!control.aitken)stop_now=gain<=tolerance;

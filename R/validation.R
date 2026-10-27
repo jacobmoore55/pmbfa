@@ -47,6 +47,7 @@
                    mag=log10(sqrt(N)*n*p)+3,
                    stopping="increment", ncandid=200L, nstart=20L,
                    nrep=1L, init.iter=5L, verbose=verbose,
+                   track_likelihood=FALSE,
                    min.component=6, variance.floor=0.1,
                    nu.min=4.1, nu.max=1e12, shape.min=0.5,
                    backtracks=12L,pcg.max.iter=0L,pcg.tol=1e-9,
@@ -99,6 +100,7 @@
                                           c("diagonal","component"))
   defaults$criterion <- match.arg(toupper(defaults$criterion),c("BIC","ICL"))
   defaults$verbose <- isTRUE(defaults$verbose)
+  defaults$track_likelihood <- isTRUE(defaults$track_likelihood)
   defaults$profile <- isTRUE(defaults$profile)
   defaults
 }

@@ -107,7 +107,7 @@ x <- x[,,ordering,drop=FALSE]
 true_class <- true_class[ordering]
 
 # Exercise the public defaults for factor search, constraints and initialization.
-models <- search_pmbfa(x,G=1:4)
+models <- search_pmbfa(x, G = 1:4, verbose = TRUE)
 
 print(models)
 selected_model <- models[[1]]
@@ -135,7 +135,19 @@ Initialization, seed, stopping tolerance and iteration budget also use their
 public defaults. The demo prints BIC, convergence, elapsed time, the original
 call and classification accuracy after allowing component labels to swap.
 
-## Calls and runtime
+## Progress, calls and runtime
+
+All four functions use `verbose=TRUE` to print one summary after each converged
+model fit, for example:
+
+```text
+G=4 q=2 r=3 CUC-CUU BIC=41601.16 (converged)
+```
+
+Set `control=list(track_likelihood=TRUE)` to also print the log likelihood and
+its change after each accepted AECM cycle. This option defaults to `FALSE`
+and works independently of `verbose`. The likelihood curve is always stored
+in the fit. Initialization screening and short refinements remain quiet.
 
 For a single returned fit:
 
@@ -184,7 +196,7 @@ No external matrix library or runtime compilation is needed.
 ```sh
 Rscript -e 'Rcpp::compileAttributes(".")'
 R CMD build .
-R CMD check --no-manual pmbfa_0.1.3.tar.gz
+R CMD check --no-manual pmbfa_0.1.4.tar.gz
 ```
 
 Package tests cover independent densities/moments, all normal/ST constraints,

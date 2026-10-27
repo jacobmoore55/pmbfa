@@ -80,7 +80,7 @@ does not embed literal arrays or function closures from do.call.
 
 See FUNCTIONS.md for the function-by-function reference. The executable demo
 uses 200 normal PMBFA observations of 8 by 8 matrices, balanced groups, true
-q=r=2 and covariance model CCC-CUC. Its only fitting call is search_pmbfa(x,G=1:4), using default adaptive
+q=r=2 and covariance model CCC-CUC. Its only fitting call is search_pmbfa(x, G = 1:4, verbose = TRUE), using default adaptive
 factor search, both constraint directions, automatic factor limits and default
 initialization/stopping controls. The true factor counts describe generation
 and do not restrict the fitted search.

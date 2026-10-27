@@ -57,7 +57,7 @@ struct Precision {
 };
 struct Controls {
   int maxit,minit,backtracks,pcgmax;double tol,mag,floor,numin,numax,shapemin,mincomp,pcgtol;
-  bool explicit_tol,verbose,aitken,profile;std::string pcg_preconditioner;
+  bool explicit_tol,track_likelihood,aitken,profile;std::string pcg_preconditioner;
   explicit Controls(const List& a);
 };
 struct Component {Mat M,A,L,D;V sig,psi;double pi=1,nu=10,omega=50,lambda=2,gam=1,gamma=1;};

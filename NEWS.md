@@ -1,3 +1,10 @@
+# pmbfa 0.1.4
+
+* Makes verbose output one criterion summary per converged model fit.
+* Adds control$track_likelihood (FALSE by default) for independent per-cycle likelihood output; initialization remains quiet.
+* Updates the demo to use search_pmbfa(x, G = 1:4, verbose = TRUE) and keeps diagnostic assertions in tests.
+* Verifies that both factor searches default to adaptive factor selection and both directions of adaptive constraint selection.
+
 # pmbfa 0.1.3
 
 * Makes the demo fit with exactly search_pmbfa(x, G=1:4), exercising all public defaults.
