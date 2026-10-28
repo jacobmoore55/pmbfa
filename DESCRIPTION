@@ -1,7 +1,7 @@
 Package: pmbfa
 Type: Package
 Title: Parsimonious Mixtures of Bilinear Factor Analyzers
-Version: 0.1.6
+Version: 0.1.7
 Authors@R: person("Jacob", "Moore", role = c("aut", "cre"),
     email = "jacob.c.moore55@gmail.com")
 Description: Fits parsimonious mixtures of normal and skewed matrix-variate

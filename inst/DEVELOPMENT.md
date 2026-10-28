@@ -70,6 +70,24 @@ warning groups unavailable in the installed Apple Clang version. Diagnostics
 are restored before compiling package code; no package-code warnings or
 floating-point checks are disabled.
 
+## Bessel working storage
+
+Each native fit owns one BesselWorkspace. The expectation step, conditional
+mixing moments, and GH shape updates reuse its C++ vector through
+Rmath's bessel_k_ex entry point. Posterior-moment evaluation owns a separate
+workspace for that call. The vector grows to the largest required order and
+is released when its owning call ends; it is not a global cache.
+
+This uses the same Rmath kernel as bessel_k. The ordinary entry point creates
+and releases an R work vector for each evaluation, causing substantial
+allocation pressure in long skewed fits. Reuse avoids those R allocations.
+The allocation regression compares identical output shapes at two degrees
+of freedom. Orders that cannot be represented by Rmath's integer work length
+use the existing uniform asymptotic fallback.
+
+See PERFORMANCE.md for measurements and the separate effects of factor-search
+coverage, constraint directions, initialization reuse and stopping rules.
+
 ## Public call and runtime metadata
 
 A scalar result contains call and elapsed (numeric wall-clock seconds). A grid

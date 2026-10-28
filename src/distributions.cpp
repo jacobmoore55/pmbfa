@@ -3,33 +3,43 @@
 namespace pm {
 // Scaled log K: the leading uniform asymptotic plus first Debye correction
 // is only a fallback for orders outside the finite range of R's implementation.
-double logbk(double x,double nu){
+double logbk(double x,double nu,BesselWorkspace& workspace){
   need(x>0&&finite(x)&&finite(nu),"Invalid Bessel K arguments.");double v=std::abs(nu);
   long double z=(v>0)?(long double)x/v:1,t=std::hypot(1.0L,z),ap=0;
   if(v>=10){long double eta=t+std::log(z)-std::log1p(t),u=1/t;
     ap=(long double)x-v*eta+.5L*std::log((long double)PI/(2*v))-.5L*std::log(t);
     long double correction=(3*u-5*u*u*u)/(24*v);ap+=std::log1p(-correction);
   }
-  if(v<10||ap<690){double b=Rf_bessel_k(x,v,2.0);if(b>0&&finite(b))return std::log(b);}
+  // R's ordinary entry point allocates an R work vector on every evaluation.
+  // Supply the identical kernel with one reusable buffer owned by this fit.
+  // Its order count is an int in Rmath; unrepresentable orders use the existing
+  // uniform asymptotic fallback instead of an overflowing allocation size.
+  if((v<10||ap<690)&&v<std::numeric_limits<int>::max()-1.0){
+    size_t needed=static_cast<size_t>(std::floor(v))+1;
+    if(workspace.values.size()<needed)workspace.values.resize(needed);
+    workspace.values[needed-1]=NA_REAL;
+    double b=R::bessel_k_ex(x,v,2.0,workspace.values.data());
+    if(b>0&&finite(b))return std::log(b);
+  }
   if(v>=10&&finite((double)ap))return (double)ap;
   throw std::runtime_error("Bessel K evaluation failed.");
 }
-double dlogbk(double x,double nu){
+double dlogbk(double x,double nu,BesselWorkspace& workspace){
   double h=1e-4*(1+std::abs(nu));
-  return (logbk(x,nu-2*h)-8*logbk(x,nu-h)+8*logbk(x,nu+h)-logbk(x,nu+2*h))/(12*h);
+  return (logbk(x,nu-2*h,workspace)-8*logbk(x,nu-h,workspace)+8*logbk(x,nu+h,workspace)-logbk(x,nu+2*h,workspace))/(12*h);
 }
-Moments gig(double lam,double chi,double psi,double cached_logk){
+Moments gig(double lam,double chi,double psi,BesselWorkspace& workspace,double cached_logk){
   need(chi>=0&&psi>=0,"Invalid GIG parameters.");Moments m;
   if(psi==0){need(chi>0&&lam< -1,"Inverse gamma conditional moments are undefined.");m={chi/(-2*lam-2),-2*lam/chi,std::log(chi/2)-R::digamma(-lam)};}
   else if(chi==0){need(lam>1,"Gamma conditional inverse moment is undefined.");m={2*lam/psi,psi/(2*(lam-1)),R::digamma(lam)-std::log(psi/2)};}
-  else {double arg=std::sqrt(chi)*std::sqrt(psi),base=finite(cached_logk)?cached_logk:logbk(arg,lam);
-    m={std::sqrt(chi/psi)*std::exp(logbk(arg,lam+1)-base),std::sqrt(psi/chi)*std::exp(logbk(arg,lam-1)-base),.5*std::log(chi/psi)+dlogbk(arg,lam)};}
+  else {double arg=std::sqrt(chi)*std::sqrt(psi),base=finite(cached_logk)?cached_logk:logbk(arg,lam,workspace);
+    m={std::sqrt(chi/psi)*std::exp(logbk(arg,lam+1,workspace)-base),std::sqrt(psi/chi)*std::exp(logbk(arg,lam-1,workspace)-base),.5*std::log(chi/psi)+dlogbk(arg,lam,workspace)};}
   need(m.a>0&&m.b>0&&finite(m.a)&&finite(m.b)&&finite(m.c),"Conditional mixing moments are nonfinite.");return m;
 }
-double log_integral(double lam,double chi,double psi,double* cached_logk){
+double log_integral(double lam,double chi,double psi,BesselWorkspace& workspace,double* cached_logk){
   if(psi==0){need(chi>0&&lam<0,"Undefined mixing integral.");return R::lgammafn(-lam)+lam*std::log(chi/2);}
   if(chi==0){need(psi>0&&lam>0,"Unbounded variance-gamma density at an observation.");return R::lgammafn(lam)-lam*std::log(psi/2);}
-  double arg=std::sqrt(chi)*std::sqrt(psi),base=logbk(arg,lam);
+  double arg=std::sqrt(chi)*std::sqrt(psi),base=logbk(arg,lam,workspace);
   if(cached_logk)*cached_logk=base;
   return std::log(2.0)+.5*lam*std::log(chi/psi)+base-arg;
 }
@@ -62,15 +72,15 @@ double maximize(const std::function<double(double)>& f,double old,double step,do
     if(fl>fr){b=r;r=l;fr=fl;l=b-ratio*(b-a);fl=f(l);}else{a=l;l=r;fl=fr;r=a+ratio*(b-a);fr=f(r);}
   }double v=fl>fr?l:r;return finite(f(v))&&f(v)>fo?v:old;
 }
-void update_family(Params& p,const State& e,const Controls& c,int& retained){
+void update_family(Params& p,const State& e,const Controls& c,int& retained,BesselWorkspace& workspace){
   if(p.family=="Normal")return;bool common=p.name[10]=='C';
   if(p.family=="GH"){
     // Conditional coordinate maximizations replace the unstable multiplicative
     // lambda update. Common concentration means common omega only.
     for(int g=0;g<p.G;++g){Component& a=p.groups[g];double cb=e.sc[g]/e.ng[g],om=a.omega,old=a.lambda;
-      a.lambda=maximize([&](double l){return l*cb-logbk(om,l);},old,1,-1e6,1e6);if(a.lambda==old)++retained;}
+      a.lambda=maximize([&](double l){return l*cb-logbk(om,l,workspace);},old,1,-1e6,1e6);if(a.lambda==old)++retained;}
     for(int g=0;g<(common?1:p.G);++g){double old=std::log(p.groups[g].omega);
-      auto obj=[&](double logomega){double om=std::exp(logomega),v=0;for(int h=common?0:g;h<(common?p.G:g+1);++h)v+=e.ng[h]*(om-logbk(om,p.groups[h].lambda))-.5*om*(e.sa[h]+e.sb[h]);return v;};
+      auto obj=[&](double logomega){double om=std::exp(logomega),v=0;for(int h=common?0:g;h<(common?p.G:g+1);++h)v+=e.ng[h]*(om-logbk(om,p.groups[h].lambda,workspace))-.5*om*(e.sa[h]+e.sb[h]);return v;};
       double value=std::exp(maximize(obj,old,.5,std::log(1e-8),std::log(1e8)));
       if(value==p.groups[g].omega)++retained;for(int h=common?0:g;h<(common?p.G:g+1);++h)p.groups[h].omega=value;
     }return;

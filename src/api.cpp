@@ -11,7 +11,7 @@ List pmbfaEM(const NumericVector& x,const List& params,const List& aargs){return
 // [[Rcpp::export]]
 List pmbfa_evaluate(const NumericVector& x,const List& params,Nullable<List> aargs=R_NilValue){List a=aargs.isNotNull()?clone(as<List>(aargs)):List::create();a["max.iter"]=0;return pm::fit(x,params,a,false);}
 // [[Rcpp::export]]
-std::string pmbfa_core_version(){return "1.2.1";}
+std::string pmbfa_core_version(){return "1.2.2";}
 
 // Count a candidate before fitting it. Used by optional nested-model screening.
 // [[Rcpp::export]]
@@ -28,7 +28,8 @@ double pmbfa_model_npar(int n,int p,int G,int q,int r,std::string model,std::str
 List pmbfa_posterior_moments(const NumericVector& x,const List& params,Nullable<List> aargs=R_NilValue){
   List controls=aargs.isNotNull()?as<List>(aargs):List::create();pm::Controls settings(controls);
   pm::Params model=pm::parse(x,params,settings,false);pm::project(model);
-  try{pm::State e=pm::expectation(x,model,true);
+  pm::BesselWorkspace workspace;
+  try{pm::State e=pm::expectation(x,model,true,workspace);
     return List::create(_["z"]=pm::to_r(e.z),_["a"]=pm::to_r(e.a),_["b"]=pm::to_r(e.b),_["c"]=pm::to_r(e.c),_["ng"]=wrap(e.ng),_["sa"]=wrap(e.sa),_["sb"]=wrap(e.sb),_["sc"]=wrap(e.sc),_["ll"]=e.ll,_["status"]="ok",_["message"]="");
   }catch(const Rcpp::internal::InterruptedException&){throw;}catch(const std::exception& ex){return List::create(_["status"]="numerical_error",_["message"]=ex.what());}
 }

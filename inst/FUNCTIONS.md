@@ -66,4 +66,4 @@ Only the four fitting/search functions are exported. Registered S3 methods suppo
 | `em.cpp` | `fit`: complete accepted-cycle AECM driver, likelihood stopping, component-size guard and result construction. |
 | `initialization.cpp` | `option_int`, `option_positive`: validate initialization controls; `random_index`: R-RNG index; `centers`, `nearest_assignment`, `repair_empty`: assignments; `make_params`: initial parameters; `fit_score`, `keep_candidate`: rank starts; `initialize`: candidate/refinement pipeline. |
 
-The header contains shared structures and declarations; `api.cpp` contains thin Rcpp entry points. `RcppExports` files are generated, rather than maintained manually.
+The header contains shared structures and declarations, including per-fit Bessel working storage; `api.cpp` contains thin Rcpp entry points. `RcppExports` files are generated, rather than maintained manually.

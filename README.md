@@ -206,12 +206,16 @@ No external matrix library or runtime compilation is needed.
 ```sh
 Rscript -e 'Rcpp::compileAttributes(".")'
 R CMD build .
-R CMD check --no-manual pmbfa_0.1.6.tar.gz
+R CMD check --no-manual pmbfa_0.1.7.tar.gz
 ```
 
 Package tests cover independent densities/moments, all normal/ST constraints,
 numerical failure and component-size guards, adaptive searches, S3 methods,
 RNG preservation, parallel workers, and call/timing metadata.
+
+`inst/PERFORMANCE.md` records a measured skew-t search comparison with the
+legacy implementation, including peak resident memory, search differences,
+and a fixed-model timing comparison.
 
 GitHub Actions runs package checks on Linux, macOS and Windows, plus Linux
 checks with R-devel and the preceding R release. Checks run for pushes to

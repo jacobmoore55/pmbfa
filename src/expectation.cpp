@@ -19,7 +19,7 @@ Mat residual(const NumericVector& x,const Component& a,int obs,int n,int p,bool 
   Mat y(trans?p:n,trans?n:p);size_t offset=(size_t)obs*n*p;
   for(int j=0;j<p;++j)for(int i=0;i<n;++i){double v=x[offset+i+(size_t)n*j]-a.M(i,j);if(trans)y(j,i)=v;else y(i,j)=v;}return y;
 }
-State expectation(const NumericVector& x,const Params& p,bool moments){
+State expectation(const NumericVector& x,const Params& p,bool moments,BesselWorkspace& workspace){
   State e;e.z=Mat(p.N,p.G);e.a=Mat(p.N,p.G);e.b=Mat(p.N,p.G);e.c=Mat(p.N,p.G);
   e.ng.assign(p.G,0);e.sa.assign(p.G,0);e.sb.assign(p.G,0);e.sc.assign(p.G,0);
   for(int g=0;g<p.G;++g){const Component& a=p.groups[g];Precision s(a.sig,a.L),t(a.psi,a.D);
@@ -28,7 +28,7 @@ State expectation(const NumericVector& x,const Params& p,bool moments){
     if(p.family!="Normal"){
       norm=t.right(s.left(a.A));rho=dot(a.A.v,norm.v);need(rho>= -1e-8&&finite(rho),"Invalid skewness quadratic form.");rho=std::max(0.0,rho);
       if(p.family=="ST"){lam=-a.nu/2;chi0=a.nu;prior=.5*a.nu*std::log(a.nu/2)-R::lgammafn(a.nu/2);}
-      if(p.family=="GH"){lam=a.lambda;chi0=psi0=a.omega;prior=-std::log(2.0)-logbk(a.omega,a.lambda)+a.omega;}
+      if(p.family=="GH"){lam=a.lambda;chi0=psi0=a.omega;prior=-std::log(2.0)-logbk(a.omega,a.lambda,workspace)+a.omega;}
       if(p.family=="NIG"){lam=-.5;chi0=1;psi0=a.gam*a.gam;prior=a.gam-.5*std::log(2*PI);}
       if(p.family=="VG"){lam=a.gamma;psi0=2*a.gamma;prior=a.gamma*std::log(a.gamma)-R::lgammafn(a.gamma);}
       lam-=.5*p.n*p.p;
@@ -37,8 +37,8 @@ State expectation(const NumericVector& x,const Params& p,bool moments){
       double delta=quadratic_distance(y,s,t);need(finite(delta)&&delta>= -1e-7,"Invalid Mahalanobis distance.");delta=std::max(0.0,delta);
       if(p.family=="Normal"){e.z(i,g)=base-.5*delta;e.a(i,g)=e.b(i,g)=1;}
       else{double chi=chi0+delta,psi=psi0+rho,cached_logk=NA_REAL;
-        e.z(i,g)=base+dot(y.v,norm.v)+prior+log_integral(lam,chi,psi,&cached_logk);
-        if(moments){Moments w=gig(lam,chi,psi,cached_logk);e.a(i,g)=w.a;e.b(i,g)=w.b;e.c(i,g)=w.c;}}
+        e.z(i,g)=base+dot(y.v,norm.v)+prior+log_integral(lam,chi,psi,workspace,&cached_logk);
+        if(moments){Moments w=gig(lam,chi,psi,workspace,cached_logk);e.a(i,g)=w.a;e.b(i,g)=w.b;e.c(i,g)=w.c;}}
       need(finite(e.z(i,g)),"Observed component density is nonfinite.");
     }
   }

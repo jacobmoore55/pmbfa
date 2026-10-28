@@ -3,6 +3,7 @@
 namespace pm {
 List fit(const NumericVector& x,const List& input,const List& options,bool normal){
   Controls control(options);
+  BesselWorkspace workspace;
   using Clock=std::chrono::steady_clock;auto began=Clock::now();V seconds(7,0);
   struct Timer{bool enabled;double& elapsed;Clock::time_point start;
     Timer(bool on,double& value):enabled(on),elapsed(value){if(enabled)start=Clock::now();}
@@ -13,7 +14,7 @@ List fit(const NumericVector& x,const List& input,const List& options,bool norma
   State state;V curve,pcg_curve,rejected_sizes;int iterations=0,pcg_iterations=0,retained=0,reductions=0;bool converged=false;std::string status="initialization_failed",message="";
   double tolerance=control.tol;
   try{
-    {Timer timer(control.profile,seconds[0]);state=expectation(x,accepted,control.maxit>0);}curve.push_back(state.ll);
+    {Timer timer(control.profile,seconds[0]);state=expectation(x,accepted,control.maxit>0,workspace);}curve.push_back(state.ll);
     if(!control.explicit_tol)tolerance=std::max(1.0,std::abs(state.ll))*std::pow(10.0,-control.mag);
     status=control.maxit==0?"evaluated":"max_iter";
     auto valid_sizes=[&](const State& candidate){
@@ -23,13 +24,13 @@ List fit(const NumericVector& x,const List& input,const List& options,bool norma
       if(!valid_sizes(state)){rejected_sizes=state.ng;status="insufficient_component_size";message="Effective component sizes must be strictly greater than min.component.";break;}
       Params trial=accepted;int pcg_before=pcg_iterations;
       {Timer timer(control.profile,seconds[1]);update_location(x,trial,state,control,pcg_iterations);}
-      {Timer timer(control.profile,seconds[2]);update_family(trial,state,control,retained);}
+      {Timer timer(control.profile,seconds[2]);update_family(trial,state,control,retained,workspace);}
       {Timer timer(control.profile,seconds[3]);update_scale(x,trial,state,control,false);}
       {Timer timer(control.profile,seconds[4]);update_scale(x,trial,state,control,true);}
-      State next;{Timer timer(control.profile,seconds[5]);next=expectation(x,trial,iter<control.maxit);}
+      State next;{Timer timer(control.profile,seconds[5]);next=expectation(x,trial,iter<control.maxit,workspace);}
       if(!valid_sizes(next)){rejected_sizes=next.ng;status="insufficient_component_size";message="Proposed effective component size is not strictly greater than min.component; retained last accepted state.";break;}
       if(next.ll<state.ll){bool found=false;
-        for(int b=1;b<=control.backtracks;++b){Timer timer(control.profile,seconds[6]);Params damped=blend(accepted,trial,std::ldexp(1.0,-b));State proposed=expectation(x,damped,iter<control.maxit);++reductions;
+        for(int b=1;b<=control.backtracks;++b){Timer timer(control.profile,seconds[6]);Params damped=blend(accepted,trial,std::ldexp(1.0,-b));State proposed=expectation(x,damped,iter<control.maxit,workspace);++reductions;
           if(proposed.ll>=state.ll&&valid_sizes(proposed)){trial=std::move(damped);next=std::move(proposed);found=true;break;}}
         if(!found){double drop=state.ll-next.ll;
           if(drop<=std::min(tolerance,1e-8*(1+std::abs(state.ll)))&&iterations>=control.minit){converged=true;status="converged";message="Stationary within floating-point resolution; retained last accepted state.";}

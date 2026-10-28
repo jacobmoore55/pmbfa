@@ -1,3 +1,9 @@
+# pmbfa 0.1.7
+
+* Reuses a per-fit Bessel working array through Rmath's caller-supplied-workspace interface, reducing allocation and garbage-collection pressure in skewed fits and posterior calculations.
+* Retains the same Bessel kernel and AECM calculations; orders outside Rmath's integer work-length range use the existing uniform asymptotic fallback.
+* Adds an allocation regression test and a measured comparison of the skew-t demo search with the legacy implementation.
+
 # pmbfa 0.1.6
 
 * Restores quiet=FALSE as the inverse alias of verbose=TRUE, with explicit quiet taking precedence over verbose settings.
