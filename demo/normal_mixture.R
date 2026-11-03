@@ -2,10 +2,15 @@
 # Each component contributes 100 full 8 by 8 matrix observations.
 library(pmbfa)
 set.seed(2026)
+
+
+# Simulated Data ----------------------------------------------------------
+
 true_class <- rep(1:2,each=100L)
 true_locations <- list(
-  matrix(-.75,8L,8L),
-  .75+outer(seq(-.5,.5,length.out=8L),seq(-.5,.5,length.out=8L)))
+  matrix(0,8L,8L),
+  matrix(1,8L,8L)
+  )
 
 # Common rank-two row/column loadings. Their columns are independent.
 true_Lambda <- .7*cbind(rep(c(1,-1),4L),rep(c(1,1,-1,-1),2L))
@@ -35,24 +40,27 @@ ordering <- sample.int(200L)
 x <- x[,,ordering,drop=FALSE]
 true_class <- true_class[ordering]
 
-# Use the public search defaults: adaptive factor search, both constraint
-# directions, automatically determined factor limits, and default starts/controls.
+
+# Parameter Estimation on Simulated Data ----------------------------------
+
+# Adaptive model selection is used by default to cut down on computation time.
 models <- search_pmbfa(x, G = 1:4, verbose = TRUE)
+
 comparison <- do.call(rbind,lapply(models,function(fit)data.frame(
   G=fit$params$moddat$G,q=fit$params$moddat$q,r=fit$params$moddat$r,
   model=fit$params$moddat$name,loglik=as.numeric(logLik(fit)),
   BIC=BIC(fit),score=fit$score,converged=fit$converged,status=fit$status,elapsed=fit$elapsed)))
 comparison <- comparison[order(comparison$G),]
-row.names(comparison) <- NULL
-selected_model <- models[[1L]]
-if(selected_model$params$moddat$G==2L) {
-  # Component labels can be exchanged without changing the mixture.
-  accuracy <- max(mean(selected_model$cluster==true_class),
-                  mean(3L-selected_model$cluster==true_class))
-}
 
-# Inspect comparison, selected_model, accuracy, and the models' call/elapsed
-# metadata interactively when needed. Only the four G summaries print here.
-# These tables expose the actual candidate comparisons in each direction.
-# selected_model$selection$paths$forward
-# selected_model$selection$paths$backward
+# Model selections for PMBFA models with 1 to 4 components (G)
+comparison
+
+# Output is ordered by best score (lowest BIC)
+selected_model <- models[[1L]]
+
+
+table(true_class, 
+      selected_model$cluster)
+
+selected_model
+
