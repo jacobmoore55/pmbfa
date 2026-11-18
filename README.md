@@ -69,74 +69,15 @@ isotropic column residuals. Locations differ between components.
 demo("normal_mixture", package = "pmbfa", ask = FALSE, echo = FALSE)
 ```
 
-`echo=FALSE` turns off R's echo of the demo source code. The demo prints
-exactly four selected-model summaries, one for each G in 1:4.
+The demo compares component counts 1 through 4 and displays the selected fit
+and its classifications. Run the companion skew-t example with
+`demo("skew_mixture", package = "pmbfa")`.
 
-The complete data generation and search code is:
-
-```r
-set.seed(2026)
-true_class <- rep(1:2,each=100L)
-true_locations <- list(
-  matrix(-.75,8L,8L),
-  .75+outer(seq(-.5,.5,length.out=8L),seq(-.5,.5,length.out=8L)))
-
-# Common rank-two row/column loadings. Their columns are independent.
-true_Lambda <- .7*cbind(rep(c(1,-1),4L),rep(c(1,1,-1,-1),2L))
-true_Delta <- .6*cbind(seq(-1,1,length.out=8L),rep(c(1,-1,-1,1),2L))
-true_sigma <- .8
-true_psi <- c(.5,1.2)
-# CCC: common row loadings and one common isotropic residual variance.
-true_row_scale <- tcrossprod(true_Lambda)+diag(true_sigma,8L)
-# CUC: common column loadings, component-specific isotropic residuals.
-true_column_scales <- lapply(true_psi,function(psi)
-  tcrossprod(true_Delta)+diag(psi,8L))
-true_model <- list(family="Normal",G=2L,q=2L,r=2L,model="CCC-CUC",
-  Lambda=true_Lambda,Delta=true_Delta,sigma=true_sigma,psi=true_psi,
-  row_scale=true_row_scale,column_scales=true_column_scales,M=true_locations)
-
-# If Z has independent standard normal entries, L_row %*% Z %*% U_col
-# has matrix-normal row scale Sigma and column scale Psi_g.
-row_chol <- t(chol(true_row_scale))
-column_chols <- lapply(true_column_scales,chol)
-x <- array(0,c(8L,8L,200L))
-for(i in seq_len(200L)) {
-  g <- true_class[i]
-  Z <- matrix(rnorm(64L),8L,8L)
-  x[,,i] <- true_locations[[g]]+row_chol%*%Z%*%column_chols[[g]]
-}
-ordering <- sample.int(200L)
-x <- x[,,ordering,drop=FALSE]
-true_class <- true_class[ordering]
-
-# Exercise the public defaults for factor search, constraints and initialization.
-models <- search_pmbfa(x, G = 1:4, verbose = TRUE)
-
-selected_model <- models[[1]]
-```
-
-### Two different search settings
-
-`search.method` controls the factor-count search and defaults to `"adaptive"`.
-The demo passes no search overrides. Factor limits are derived from the matrix
-dimensions (up to four per side for these 8 by 8 observations); the true q=r=2
-values specify the generating model, not a fitted search restriction.
-
-Covariance-constraint search separately defaults to `adaptive=TRUE` and
-`adaptive.method="both"`. No `modelSubset` is supplied, so both forward and
-backward constraint paths run. Supplying `modelSubset` would bypass this search.
-
-The returned selected fit records both histories:
-
-```r
-selected_model$selection$paths$forward
-selected_model$selection$paths$backward
-```
-
-Initialization, seed, stopping tolerance and iteration budget also use their
-public defaults. The demo prints only the selected-model summaries. Its
-`models`, `comparison`, `selected_model` and `accuracy` objects can be inspected
-afterward; fits also store their calls and elapsed times.
+Both factor searches use adaptive factor selection and forward and backward
+constraint selection by default. To run independent component counts concurrently,
+use, for example, `search_pmsbfa(x, G = 1:4, parallelize = TRUE, ncores = 2)`.
+Parallel searches report their winners in the supplied component-count order
+after the workers finish. Returned fits are ordered by the selected criterion.
 
 ## Progress, calls and runtime
 
@@ -206,7 +147,7 @@ No external matrix library or runtime compilation is needed.
 ```sh
 Rscript -e 'Rcpp::compileAttributes(".")'
 R CMD build .
-R CMD check --no-manual pmbfa_0.1.7.tar.gz
+R CMD check --no-manual pmbfa_0.1.8.tar.gz
 ```
 
 Package tests cover independent densities/moments, all normal/ST constraints,

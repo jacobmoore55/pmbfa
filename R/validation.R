@@ -111,3 +111,7 @@
   defaults
 }
 
+
+.pmbfa_warn_small <- function() warning(
+    "Some requested component counts have fewer than 30 observations per component on average; fits may be unstable.",
+    call.=FALSE)

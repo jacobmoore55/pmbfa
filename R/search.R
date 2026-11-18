@@ -1,6 +1,6 @@
 # Internal organization: see inst/DEVELOPMENT.md.
 # Search factor dimensions, cache comparisons and rank results for each G.
-.pmbfa_factor_search <- function(x,G,max_q,max_r,family,search.method,dots) {
+.pmbfa_factor_search <- function(x,G,max_q,max_r,family,search.method,dots,parallelize,ncores) {
   if (!is.numeric(x) || length(dim(x)) != 3L)
     stop("x must be a numeric three-dimensional array.",call.=FALSE)
   if ("family" %in% names(dots))
@@ -17,85 +17,111 @@
   search.method <- match.arg(search.method,c("adaptive","grid"))
   criterion <- if (isTRUE(dots$icl)) "ICL" else
     if (!is.null(dots$criterion)) toupper(dots$criterion[1]) else "BIC"
-  warned_small_components <- FALSE
-  results <- lapply(G,function(g) {
-    started_g <- proc.time()[["elapsed"]]
-    cache <- new.env(parent=emptyenv())
-    evaluate <- function(q,r) {
-      key <- paste(q,r,sep=",")
-      if (!exists(key,cache,inherits=FALSE)) {
-        arguments <- c(list(x=x,G=g,q=q,r=r),dots)
-        if (family != "Normal") arguments$family <- family
-        fit <- withCallingHandlers(
-          do.call(.pmbfa_search_fit,arguments),
-          warning=function(condition) {
-            if (startsWith(conditionMessage(condition),
-              "Some requested component counts have fewer than 30")) {
-              if (warned_small_components) invokeRestart("muffleWarning")
-              warned_small_components <<- TRUE
-            }
-          })
-        assign(key,fit,cache)
-      }
-      get(key,cache)
-    }
-    if (search.method == "grid") {
-      for (q in seq_len(max_q)) for (r in seq_len(max_r)) evaluate(q,r)
-    } else {
-      # Coarse-to-fine coordinate search, followed by unit-neighbor refinement.
-      # This is a heuristic and does not claim the global grid optimum.
-      q <- max(1L,ceiling(max_q/2)); r <- max(1L,ceiling(max_r/2))
-      step_q <- max(1L,ceiling(max_q/2)); step_r <- max(1L,ceiling(max_r/2))
-      current <- evaluate(q,r)
-      repeat {
-        pairs <- unique(rbind(c(q,r),c(max(1L,q-step_q),r),
-          c(min(max_q,q+step_q),r),c(q,max(1L,r-step_r)),
-          c(q,min(max_r,r+step_r))))
-        fits <- lapply(seq_len(nrow(pairs)),function(i)
-          evaluate(pairs[i,1],pairs[i,2]))
-        best <- .pmbfa_best(fits,criterion)
-        if (best$score < current$score) {
-          q <- best$params$moddat$q; r <- best$params$moddat$r
-          current <- best
-        } else if (step_q == 1L && step_r == 1L) break else {
-          step_q <- max(1L,ceiling(step_q/2)); step_r <- max(1L,ceiling(step_r/2))
-        }
-      }
-    }
-    fits <- mget(ls(cache),cache)
-    best <- .pmbfa_best(fits,criterion)
-    best$factor.search <- data.frame(
-      G=g,q=vapply(fits,function(fit)as.integer(fit$params$moddat$q),integer(1)),
-      r=vapply(fits,function(fit)as.integer(fit$params$moddat$r),integer(1)),
-      score=vapply(fits,function(fit)fit$score,numeric(1)),
-      converged=vapply(fits,function(fit)isTRUE(fit$converged),logical(1)))
-    best$factor.search.method <- search.method
-    best$elapsed <- .pmbfa_elapsed(started_g)
-    .pmbfa_report_fit(best)
-    best
-  })
+  workers <- .pmbfa_worker_count(parallelize,ncores,length(G))
+  if (any(dim(x)[3]/G < 30)) .pmbfa_warn_small()
+  arguments <- list(x=x,max_q=max_q,max_r=max_r,family=family,
+                    search.method=search.method,dots=dots,criterion=criterion)
+  if (workers > 1L) {
+    # Socket workers propagate errors to the caller on all platforms.
+    cluster <- .pmbfa_cluster(workers)
+    on.exit(parallel::stopCluster(cluster),add=TRUE)
+    jobs <- parallel::parLapplyLB(cluster,G,.pmbfa_search_worker,arguments=arguments)
+    results <- lapply(jobs,function(job) {
+      if (length(job$output)) writeLines(job$output)
+      .pmbfa_report_fit(job$fit)
+      job$fit
+    })
+  } else {
+    results <- lapply(G,function(g) {
+      fit <- .pmbfa_search_one(g,arguments)
+      .pmbfa_report_fit(fit)
+      fit
+    })
+  }
   if (length(results) == 1L) return(results[[1]])
   results <- results[order(vapply(results,function(fit)fit$score,numeric(1)))]
   class(results) <- c("pmbfa_fits","list")
   results
 }
 
+# Replay optional likelihood traces in component-count order in the caller.
+.pmbfa_search_worker <- function(g,arguments) {
+  output <- utils::capture.output(fit <- .pmbfa_search_one(g,arguments))
+  list(fit=fit,output=output)
+}
+
+# Each component count owns its factor cache and searches serially.
+.pmbfa_search_one <- function(g,arguments) {
+  x <- arguments$x
+  max_q <- arguments$max_q
+  max_r <- arguments$max_r
+  family <- arguments$family
+  search.method <- arguments$search.method
+  dots <- arguments$dots
+  criterion <- arguments$criterion
+  started_g <- proc.time()[["elapsed"]]
+  cache <- new.env(parent=emptyenv())
+  evaluate <- function(q,r) {
+    key <- paste(q,r,sep=",")
+    if (!exists(key,cache,inherits=FALSE)) {
+      arguments <- c(list(x=x,G=g,q=q,r=r),dots)
+      if (family != "Normal") arguments$family <- family
+      fit <- do.call(.pmbfa_search_fit,arguments)
+      assign(key,fit,cache)
+    }
+    get(key,cache)
+  }
+  if (search.method == "grid") {
+    for (q in seq_len(max_q)) for (r in seq_len(max_r)) evaluate(q,r)
+  } else {
+    # Coarse-to-fine coordinate search, followed by unit-neighbor refinement.
+    # This is a heuristic and does not claim the global grid optimum.
+    q <- max(1L,ceiling(max_q/2)); r <- max(1L,ceiling(max_r/2))
+    step_q <- max(1L,ceiling(max_q/2)); step_r <- max(1L,ceiling(max_r/2))
+    current <- evaluate(q,r)
+    repeat {
+      pairs <- unique(rbind(c(q,r),c(max(1L,q-step_q),r),
+        c(min(max_q,q+step_q),r),c(q,max(1L,r-step_r)),
+        c(q,min(max_r,r+step_r))))
+      fits <- lapply(seq_len(nrow(pairs)),function(i)
+        evaluate(pairs[i,1],pairs[i,2]))
+      best <- .pmbfa_best(fits,criterion)
+      if (best$score < current$score) {
+        q <- best$params$moddat$q; r <- best$params$moddat$r
+        current <- best
+      } else if (step_q == 1L && step_r == 1L) break else {
+        step_q <- max(1L,ceiling(step_q/2)); step_r <- max(1L,ceiling(step_r/2))
+      }
+    }
+  }
+  fits <- mget(ls(cache),cache)
+  best <- .pmbfa_best(fits,criterion)
+  best$factor.search <- data.frame(
+    G=g,q=vapply(fits,function(fit)as.integer(fit$params$moddat$q),integer(1)),
+    r=vapply(fits,function(fit)as.integer(fit$params$moddat$r),integer(1)),
+    score=vapply(fits,function(fit)fit$score,numeric(1)),
+    converged=vapply(fits,function(fit)isTRUE(fit$converged),logical(1)))
+  best$factor.search.method <- search.method
+  best$elapsed <- .pmbfa_elapsed(started_g)
+  best
+}
+
 # Search skewed mixture component counts and factor dimensions.
 search_pmsbfa <- function(x,G,max_q=NULL,max_r=NULL,family="ST",
-                           search.method=c("adaptive","grid"),...) {
+                           search.method=c("adaptive","grid"),...,parallelize=FALSE,ncores=NULL) {
   requested_call <- match.call()
   started <- proc.time()[["elapsed"]]
   family <- match.arg(family,c("ST","GH","NIG","VG","Normal"))
-  result <- .pmbfa_factor_search(x,G,max_q,max_r,family,search.method[1L],list(...))
+  result <- .pmbfa_factor_search(x,G,max_q,max_r,family,search.method[1L],list(...),parallelize,ncores)
   .pmbfa_record_result(result,requested_call,.pmbfa_elapsed(started))
 }
 
 # Search normal mixture component counts and factor dimensions.
 search_pmbfa <- function(x,G,max_q=NULL,max_r=NULL,
-                          search.method=c("adaptive","grid"),...) {
+                          search.method=c("adaptive","grid"),...,parallelize=FALSE,ncores=NULL) {
   requested_call <- match.call()
   started <- proc.time()[["elapsed"]]
-  result <- .pmbfa_factor_search(x,G,max_q,max_r,"Normal",search.method[1L],list(...))
+  result <- .pmbfa_factor_search(x,G,max_q,max_r,"Normal",search.method[1L],list(...),parallelize,ncores)
   .pmbfa_record_result(result,requested_call,.pmbfa_elapsed(started))
 }
 
@@ -109,5 +135,5 @@ search_pmbfa <- function(x,G,max_q=NULL,max_r=NULL,
     screening=c("none","nested"),...) {
   .pmbfa_fit(x,G,q,r,class,modelSubset,family,seed,adaptive,
     adaptive.method[1L],criterion[1L],verbose,parallelize,ncores,inits,control,
-    list(...),screening=screening[1L],report=FALSE)
+    list(...),screening=screening[1L],report=FALSE,warn_small=FALSE)
 }

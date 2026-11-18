@@ -12,7 +12,7 @@ test_that("scalar fit calls retain the actual user expression and elapsed second
   b<-pmsbfa(x=x,G=2,q=1,r=1,modelSubset="UUU-UUU-U-U",control=ctl)
   expect_identical(b$call,quote(pmsbfa(x=x,G=2,q=1,r=1,modelSubset="UUU-UUU-U-U",control=ctl)))
   check_elapsed(b$elapsed)
-  expect_output(print(a),"Elapsed: [0-9]+\\.[0-9]{2} seconds")
+  expect_output(print(a),"Elapsed time: [0-9]+\\.[0-9]{2} seconds")
   expect_output(print(a),"Call: pmbfa")
 })
 

@@ -3,7 +3,7 @@
 \title{Fit Skewed Bilinear Factor Mixtures}
 \description{Fits parsimonious mixtures of matrix-variate skewed bilinear factor analyzers for specified component and factor counts. Supported families are skew-t, generalized hyperbolic, normal inverse Gaussian and variance-gamma, with a normal-family option. Skewness and concentration can be common or component-specific.}
 \usage{
-pmsbfa(x, G = 2L, q = 1:2, r = 1:2, class = NULL,
+pmsbfa(x, G = 1:2, q = 1:2, r = 1:2, class = NULL,
   modelSubset = NULL, family = "ST", seed = 123456L, adaptive = TRUE,
   adaptive.method = c("both", "forward", "backward"),
   criterion = c("BIC", "ICL"), verbose = FALSE, parallelize = FALSE,

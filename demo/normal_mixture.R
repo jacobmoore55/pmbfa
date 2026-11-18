@@ -49,7 +49,7 @@ models <- search_pmbfa(x, G = 1:4, verbose = TRUE)
 comparison <- do.call(rbind,lapply(models,function(fit)data.frame(
   G=fit$params$moddat$G,q=fit$params$moddat$q,r=fit$params$moddat$r,
   model=fit$params$moddat$name,loglik=as.numeric(logLik(fit)),
-  BIC=BIC(fit),score=fit$score,converged=fit$converged,status=fit$status,elapsed=fit$elapsed)))
+  BIC=BIC(fit),status=fit$status,elapsed=fit$elapsed)))
 comparison <- comparison[order(comparison$G),]
 
 # Model selections for PMBFA models with 1 to 4 components (G)

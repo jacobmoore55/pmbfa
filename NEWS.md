@@ -1,3 +1,9 @@
+# pmbfa 0.1.8
+
+* Direct fits default to one and two components. Their summaries show the selected criterion, iterations and elapsed time.
+* Factor searches support parallel workers across component counts.
+* Includes the revised normal demo and a companion skew-t demo. Tests exercise the fitting functions independently of demo output.
+
 # pmbfa 0.1.7
 
 * Reuses a per-fit Bessel working array through Rmath's caller-supplied-workspace interface, reducing allocation and garbage-collection pressure in skewed fits and posterior calculations.

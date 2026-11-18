@@ -1,6 +1,6 @@
 # Internal organization: see inst/DEVELOPMENT.md.
 # Fit skewed component mixtures for a chosen distribution family and specified dimensions.
-pmsbfa <- function(x, G=2L, q=1:2, r=1:2, class=NULL, modelSubset=NULL,
+pmsbfa <- function(x, G=1:2, q=1:2, r=1:2, class=NULL, modelSubset=NULL,
                     family="ST", seed=123456L, adaptive=TRUE,
                     adaptive.method=c("both","forward","backward"),
                     criterion=c("BIC","ICL"), verbose=FALSE,
@@ -19,7 +19,7 @@ pmsbfa <- function(x, G=2L, q=1:2, r=1:2, class=NULL, modelSubset=NULL,
 }
 
 # Fit normal component mixtures for specified component and factor counts.
-pmbfa <- function(x, G=2L, q=1:2, r=1:2, class=NULL, modelSubset=NULL,
+pmbfa <- function(x, G=1:2, q=1:2, r=1:2, class=NULL, modelSubset=NULL,
                    seed=123456L, adaptive=TRUE,
                    adaptive.method=c("both","forward","backward"),
                    criterion=c("BIC","ICL"), verbose=FALSE,

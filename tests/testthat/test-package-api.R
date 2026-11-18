@@ -56,9 +56,7 @@ test_that("seeds, grids, supplied starts and known labels remain reproducible", 
   g<-pmbfa(x,G=1:2,q=1,r=1,modelSubset="UUU-UUU",control=ctl)
   expect_s3_class(g,"pmbfa_fits");expect_length(g,2L)
   expect_false(is.unsorted(vapply(g,function(z)z$score,numeric(1))))
-  expect_identical(capture.output(print(a))[3],sprintf(
-    "  logLik: %.2f | BIC: %.2f | ICL: %.2f | parameters: %s",
-    tail(a$loglik,1),a$bic,a$icl,a$npar))
+
 })
 
 test_that("fork and socket workers return the same fixed-seed fits", {

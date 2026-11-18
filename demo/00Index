@@ -1,1 +1,2 @@
 normal_mixture    Rank-two normal PMBFA data and forward/backward adaptive searches
+skew_mixture      Rank-two skew-t PMSBFA data and adaptive factor search

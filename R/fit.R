@@ -39,7 +39,7 @@
 .pmbfa_fit <- function(x, G, q, r, class, modelSubset, family, seed, adaptive,
                        adaptive.method, criterion, verbose, parallelize,
                        ncores, inits, control, dots, screening="none",
-                       report=TRUE) {
+                       report=TRUE,warn_small=TRUE) {
   for (alias in c("rG", "rq", "rr")) {
     if (!is.null(dots[[alias]])) {
       if (alias == "rG") G <- dots[[alias]]
@@ -67,9 +67,7 @@
   n <- dim(x)[1]; p <- dim(x)[2]; N <- dim(x)[3]
   if (N <= 10L) stop("x must contain more than 10 observations.",call.=FALSE)
   G <- .pmbfa_integer(G,"G", upper=N)
-  if (any(N/G < 30)) warning(
-    "Some requested component counts have fewer than 30 observations per component on average; fits may be unstable.",
-    call.=FALSE)
+  if (warn_small && any(N/G < 30)) .pmbfa_warn_small()
   q <- .pmbfa_integer(q,"q", upper=.pmbfa_max_factors(n))
   r <- .pmbfa_integer(r,"r", upper=.pmbfa_max_factors(p))
   family <- match.arg(family, c("ST", "GH", "NIG", "VG", "Normal"))
@@ -96,13 +94,8 @@
   tuples <- expand.grid(G=G,q=q,r=r, KEEP.OUT.ATTRS=FALSE)
   if (!is.null(inits) && nrow(tuples) != 1L)
     stop("Supply inits only for a single (G,q,r) combination.", call.=FALSE)
-  if (!is.logical(parallelize) || length(parallelize) != 1L ||
-      is.na(parallelize)) stop("parallelize must be TRUE or FALSE.", call.=FALSE)
-  if (!is.null(ncores)) {
-    ncores <- .pmbfa_integer(ncores,"ncores")
-    if (length(ncores) != 1L) stop("ncores must be scalar.",call.=FALSE)
-  }
-  run_parallel <- parallelize && nrow(tuples) > 1L
+  ncores <- .pmbfa_worker_count(parallelize,ncores,nrow(tuples))
+  run_parallel <- ncores > 1L
   runner <- function(i) {
     fit <- .pmbfa_timed_tuple(x,tuples$G[i],tuples$q[i],tuples$r[i],
       family,labels,modelSubset,adaptive,adaptive.method,criterion,seed,inits,control,
@@ -111,9 +104,6 @@
     fit
   }
   if (run_parallel) {
-    if (is.null(ncores)) ncores <- min(nrow(tuples),
-      max(1L, parallel::detectCores(logical=FALSE)-1L, na.rm=TRUE))
-    ncores <- min(ncores,nrow(tuples))
     if (.Platform$OS.type == "unix") {
       out <- parallel::mclapply(seq_len(nrow(tuples)),runner,
                                  mc.cores=ncores,mc.set.seed=is.null(seed))

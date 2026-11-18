@@ -4,7 +4,7 @@
 \description{Compares skewed bilinear factor mixture models across candidate component counts and row/column factor counts for a selected family. It combines factor search with fixed or adaptive covariance/skewness constraint selection.}
 \usage{
 search_pmsbfa(x, G, max_q = NULL, max_r = NULL, family = "ST",
-  search.method = c("adaptive", "grid"), ...)
+  search.method = c("adaptive", "grid"), ..., parallelize = FALSE, ncores = NULL)
 }
 \arguments{
 \item{x}{A finite array with dimensions \code{c(n,p,N)}.}
@@ -12,6 +12,8 @@ search_pmsbfa(x, G, max_q = NULL, max_r = NULL, family = "ST",
 \item{max_q, max_r}{Maximum factor counts. Defaults use the identifiable diagonal factor-analysis rank limit.}
 \item{family}{\code{"ST"}, \code{"GH"}, \code{"NIG"}, \code{"VG"}, or \code{"Normal"}.}
 \item{search.method}{\code{"adaptive"} (the default) uses coarse-to-fine coordinate and neighbor comparisons; \code{"grid"} fits every factor pair up to the supplied maxima.}
+\item{parallelize}{Run the searches for distinct component counts in parallel.}
+\item{ncores}{Maximum number of workers. The default leaves one detected physical core free when possible. At most one worker is used per distinct component count.}
 \item{...}{Arguments forwarded to \code{pmbfa} or \code{pmsbfa}, including constraint selection, criterion, initialization and controls. Specify factor limits here instead of forwarding q or r.}
 }
 \details{By default, covariance constraints are searched adaptively in both forward and backward directions: \code{adaptive=TRUE} and \code{adaptive.method="both"}. These arguments are forwarded through \code{...}. Supplying \code{modelSubset} fits only the listed constraint models and bypasses that adaptive constraint search. The separate \code{search.method} argument controls factor-count search. Its adaptive option is local and does not guarantee the best factor combination on the entire grid. Constraint selection within each factor combination follows the arguments forwarded in \code{...}. Failed or unconverged fits cannot win a criterion comparison against a converged fit. If all candidates fail, the most informative available object is returned for diagnosis.}
@@ -26,9 +28,7 @@ A \code{pmbfa_fits} list stores the overall call and wall-clock time in \code{at
 For parallel grids, overall elapsed time includes worker overhead and is not the sum of worker times. These timings measure complete user requests rather than isolated native iteration speed. The recorded call contains the user's expression; the data must still be available in the evaluation environment to rerun it.
 }
 
-\section{Balanced normal-mixture demonstration}{
-\code{demo("normal_mixture", package="pmbfa", ask=FALSE, echo=FALSE)} generates 200 normal PMBFA observations of 8 by 8 matrices in two balanced components, with distinct locations, true \code{q=r=2}, and covariance model \code{CCC-CUC}. Its only fitting call is \code{search_pmbfa(x, G = 1:4, verbose = TRUE)}. This exercises the default adaptive factor search, automatically determined factor limits, both forward/backward constraint searches, and default initialization and stopping controls. No \code{modelSubset} restricts the fitted covariance models. The demo prints exactly four selected-model summaries. Its comparison, selected_model and accuracy objects, and fitted call/timing metadata, can be inspected afterward.
-}
+\section{Demonstration}{Run \code{demo("skew_mixture", package="pmbfa")} for a worked example.}
 \seealso{\link{pmbfa}, \link{pmbfa-control}}
 \examples{
 set.seed(2)

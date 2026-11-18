@@ -98,6 +98,12 @@ test_that("direct fitting reports one selected model for every tested G,q,r tupl
 
 test_that("factor searches report only the best model for each tested G", {
   controls <- quick_control(max.iter=3L,min.iter=1L,tol=1e6,min.component=0)
+  launched <- integer()
+  start_cluster <- native(".pmbfa_cluster")
+  local_mocked_bindings(.pmbfa_cluster=function(ncores) {
+    launched <<- c(launched,ncores)
+    start_cluster(ncores)
+  },.package="pmbfa")
   G <- c(2L,1L)
   for(entry in c("search_pmbfa","search_pmsbfa")) {
     skewed <- entry == "search_pmsbfa"
@@ -108,6 +114,11 @@ test_that("factor searches report only the best model for each tested G", {
         control=controls,verbose=TRUE)
       if(method == "grid")arguments$search.method <- method
       output <- capture.output(fits <- do.call(getExportedValue("pmbfa",entry),arguments))
+      parallel_output <- capture.output(parallel_fits <- do.call(getExportedValue("pmbfa",entry),
+        c(arguments,list(parallelize=TRUE,ncores=2L))))
+      expect_identical(parallel_output,output)
+      expect_identical(lapply(parallel_fits,"[[","factor.search"),lapply(fits,"[[","factor.search"))
+      expect_identical(lapply(parallel_fits,"[[","params"),lapply(fits,"[[","params"))
       expect_true(all(vapply(fits,function(fit)fit$converged,logical(1))),info=entry)
       expect_length(output,length(G))
       by_G <- fits[match(G,vapply(fits,function(fit)as.integer(fit$params$moddat$G),integer(1)))]
@@ -120,6 +131,7 @@ test_that("factor searches report only the best model for each tested G", {
       }
     }
   }
+  expect_identical(launched,rep(2L,4L))
 })
 
 test_that("parallel fitting reports tuple winners in the parent process", {

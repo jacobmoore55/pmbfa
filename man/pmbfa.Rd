@@ -3,7 +3,7 @@
 \title{Fit Normal Bilinear Factor Mixtures}
 \description{Fits parsimonious mixtures of matrix-variate normal bilinear factor analyzers for specified component and factor counts. It supports shared or component-specific covariance structure, known labels, fixed constraint models, and adaptive constraint selection.}
 \usage{
-pmbfa(x, G = 2L, q = 1:2, r = 1:2, class = NULL,
+pmbfa(x, G = 1:2, q = 1:2, r = 1:2, class = NULL,
   modelSubset = NULL, seed = 123456L, adaptive = TRUE,
   adaptive.method = c("both", "forward", "backward"),
   criterion = c("BIC", "ICL"), verbose = FALSE, parallelize = FALSE,
