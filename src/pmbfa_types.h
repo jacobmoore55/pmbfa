@@ -1,15 +1,6 @@
 #ifndef PMBFA_TYPES_H
 #define PMBFA_TYPES_H
-// R headers can name diagnostic groups absent from the host Clang version.
-// Localize this compatibility suppression to external headers only.
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wunknown-warning-option"
-#endif
 #include <Rcpp.h>
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
 #include <vector>
 #include <string>
 #include <cmath>

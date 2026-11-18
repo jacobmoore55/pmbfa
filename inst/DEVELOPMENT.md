@@ -61,15 +61,6 @@ collapse, matching failure snapshots, and exclusion of attractive raw criteria
 from invalid fits. Independent numerical references check actual densities and
 updates rather than merely repeating implementation formulas.
 
-## Compiler compatibility
-
-Rcpp automatically includes pmbfa_types.h when generating native wrappers.
-The header locally suppresses unknown diagnostic-group names while including
-external R/Rcpp headers under Clang. This accommodates R headers that mention
-warning groups unavailable in the installed Apple Clang version. Diagnostics
-are restored before compiling package code; no package-code warnings or
-floating-point checks are disabled.
-
 ## Bessel working storage
 
 Each native fit owns one BesselWorkspace. The expectation step, conditional

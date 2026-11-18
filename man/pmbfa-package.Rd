@@ -10,6 +10,9 @@ Use \code{pmbfa} and \code{pmsbfa} for specified component/factor combinations. 
 Run \code{demo("normal_mixture", package="pmbfa", ask=FALSE, echo=FALSE)} for normal PMBFA data with true \code{q=r=2}, constraints \code{CCC-CUC}, and 200 matrices of dimensions 8 by 8 split equally between two components. The sole fitting call \code{search_pmbfa(x, G = 1:4, verbose = TRUE)} uses the default adaptive factor search and both forward/backward constraint directions.
 Run \code{demo("skew_mixture", package="pmbfa")} for the skew-t example using \code{search_pmsbfa}.
 }
+\references{Moore, J. and Gallaugher, M. P. B. (2026).
+Parsimonious Mixtures of Skewed Bilinear Factor Analyzers.
+\doi{10.48550/arXiv.2607.14297}.}
 \author{Jacob Moore \email{jacob.c.moore55@gmail.com}}
 \seealso{\link{pmbfa}, \link{search_pmbfa}, \link{pmbfa-control}}
 \keyword{package}

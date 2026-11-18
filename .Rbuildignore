@@ -5,3 +5,7 @@
 ^\.github$
 ^\.gitignore$
 ^\.gitattributes$
+
+^investigations$
+^output$
+^tmp$

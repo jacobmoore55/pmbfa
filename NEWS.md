@@ -1,3 +1,8 @@
+# pmbfa 0.1.9
+
+* Removes the Clang diagnostic suppression and runs the skew-t demo with two workers.
+* Cites the methodological preprint by Moore and Gallaugher (2026).
+
 # pmbfa 0.1.8
 
 * Direct fits default to one and two components. Their summaries show the selected criterion, iterations and elapsed time.

@@ -56,7 +56,7 @@ true_class <- true_class[ordering]
 # Parameter Estimation on Simulated Data ----------------------------------
 
 # Adaptive model selection is used by default to cut down on computation time.
-models <- search_pmsbfa(x, G = 1:4, parallelize = TRUE, ncores = 4)
+models <- search_pmsbfa(x, G = 1:4, parallelize = TRUE, ncores = 2)
 
 comparison <- do.call(rbind,lapply(models,function(fit)data.frame(
   G=fit$params$moddat$G,q=fit$params$moddat$q,r=fit$params$moddat$r,

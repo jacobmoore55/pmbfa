@@ -1,7 +1,7 @@
 Package: pmbfa
 Type: Package
 Title: Parsimonious Mixtures of Bilinear Factor Analyzers
-Version: 0.1.8
+Version: 0.1.9
 Authors@R: person("Jacob", "Moore", role = c("aut", "cre"),
     email = "jacob.c.moore55@gmail.com")
 Description: Fits parsimonious mixtures of normal and skewed matrix-variate
@@ -9,7 +9,9 @@ Description: Fits parsimonious mixtures of normal and skewed matrix-variate
     maximization algorithm. Provides constrained covariance models, shared
     initialization, adaptive constraint selection, and factor searches for
     normal, skew-t, generalized hyperbolic, normal inverse Gaussian, and
-    variance-gamma component distributions. Numerical fitting and initialization
+    variance-gamma component distributions. The skew-t model and estimation
+    algorithm are described by Moore and Gallaugher (2026)
+    <doi:10.48550/arXiv.2607.14297>. Numerical fitting and initialization
     use compiled C++ while model selection remains in R. Returned fits record
     original calls, elapsed wall-clock time, convergence and numerical diagnostics.
 License: GPL (>= 2)

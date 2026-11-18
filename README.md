@@ -147,7 +147,7 @@ No external matrix library or runtime compilation is needed.
 ```sh
 Rscript -e 'Rcpp::compileAttributes(".")'
 R CMD build .
-R CMD check --no-manual pmbfa_0.1.8.tar.gz
+R CMD check --no-manual pmbfa_0.1.9.tar.gz
 ```
 
 Package tests cover independent densities/moments, all normal/ST constraints,
